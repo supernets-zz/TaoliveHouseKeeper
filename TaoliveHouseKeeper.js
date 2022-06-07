@@ -33,17 +33,6 @@ Date.prototype.Format = function (fmt) {
     }
     return fmt;
 };
-  
-function timestampToTime(timestamp) {
-    var date = new Date(timestamp);//时间戳为10位需*1000，时间戳为13位的话不需乘1000
-    var Y = date.getFullYear() + '-';
-    var M = (date.getMonth()+1 < 10 ? '0'+(date.getMonth()+1) : date.getMonth()+1) + '-';
-    var D = (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + ' ';
-    var h = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
-    var m = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()) + ':';
-    var s = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds();
-    return Y+M+D+h+m+s;
-}
 
 // 从存储中获取phone
 console.setGlobalLogConfig({
@@ -54,6 +43,7 @@ console.setGlobalLogConfig({
 ui.statusBarColor("#FF4FB3FF")
 function main_page(){
     toastLog("start main page");
+    //非直播视频有的下面有遮挡导致上划返回true但实际没效果，多备几套坐标随机选择
     ui.layout(
         <drawer id="drawer">
             <vertical>
@@ -123,6 +113,10 @@ threads.start(function(){
     var flag = background.blockedGet();
 	log("启动点淘管家主线程:");
     requestScreenCapture();
+    // 记录上次走路赚元宝、打工赚元宝除观看视频外的任务（主要是收集步数和体力）的时间戳，视频任务执行起来会耽搁采集的时间，故超过10分钟就先不做视频任务，先去隔壁采集
+    // 先减去lastCollectTimeout为了一开始先不做视频任务
+    common.safeSet(common.lastWalkToEarnCollectTag, Math.floor(new Date().getTime() / 1000) - common.lastCollectTimeout);
+    common.safeSet(common.lastWorkToEarnCollectTag, Math.floor(new Date().getTime() / 1000) - common.lastCollectTimeout);
     while (flag > 0) {
         var ret = false;
         try {
@@ -146,11 +140,11 @@ threads.start(function(){
             device.cancelKeepingAwake();
         }
         var allComplete = isAllDailyTaskComplete();
-        log("isAllDailyTaskComplete: " + allComplete + ", mainWorker: " + ret);
+        log("isAllDailyTaskComplete: " + allComplete + ", mainWorker return: " + ret);
         if (allComplete && ret) {
             var now = new Date().getTime();
             var nextCheckTime = parseInt((now + execInterval * 1000) / (execInterval * 1000)) * (execInterval * 1000);
-            log((nextCheckTime - now) + "s 后的 " + timestampToTime(nextCheckTime) + " 进行下一次检查");
+            log((nextCheckTime - now) + "s 后的 " + common.timestampToTime(nextCheckTime) + " 进行下一次检查");
             sleep(nextCheckTime - now);
         }
     }

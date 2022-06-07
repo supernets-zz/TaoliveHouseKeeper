@@ -4,8 +4,24 @@ common.appName = "TaoliveHouseKeeper";
 common.destAppName = "点淘";
 common.taolivePackageName = "com.taobao.live";
 
+common.lastWalkToEarnCollectTag = "走路赚元宝采集时间戳";
+common.lastWorkToEarnCollectTag = "打工赚元宝采集时间戳";
+common.lastCollectTimeout = 10 * 60;    //采集超时时间
+
 var storagelock = threads.lock();
 var localStorages = storages.create(common.appName+":global");
+
+
+common.timestampToTime = function (timestamp) {
+    var date = new Date(timestamp);//时间戳为10位需*1000，时间戳为13位的话不需乘1000
+    var Y = date.getFullYear() + '-';
+    var M = (date.getMonth()+1 < 10 ? '0'+(date.getMonth()+1) : date.getMonth()+1) + '-';
+    var D = (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + ' ';
+    var h = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
+    var m = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()) + ':';
+    var s = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds();
+    return Y+M+D+h+m+s;
+}
 
 common.safeGet = function (key) {
     var flag = false;

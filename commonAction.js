@@ -67,6 +67,12 @@ commonAction.backTaoliveMainPage = function () {
             if (result){
                 return true;
             }
+            //非直播视频播放过程中back会弹出 未完成看视频x分钟任务 弹窗提示，再back会返回播放页面，故需特殊处理
+            var leaveTips = text("残忍离开").findOne(1000);
+            if (leaveTips != null) {
+                log("点击 残忍离开: " + leaveTips.click());
+                sleep(1000);
+            }
             var result = back();
             if (!result) {
                 toastLog("Taolive back fail");
@@ -214,6 +220,11 @@ commonAction.doSearchTasks = function (tasklist) {
 //成功返回true，超时或异常返回false，最后会返回上一个页面
 commonAction.doWatchTasks = function (tasklist) {
     var ret = false;
+    var swipeChoice = [
+        [device.height * 7 / 8, device.height / 8],
+        [device.height * 5 / 6, device.height / 8],
+        [device.height * 3 / 4, device.height / 8]
+    ];
     for (var i = 0; i < tasklist.length; i++) {
         toastLog("点击 " + tasklist[i].Title + " " + tasklist[i].BtnName + ": " + click(tasklist[i].Button.bounds().centerX(), tasklist[i].Button.bounds().centerY()));
         // 等待离开任务列表页面
@@ -249,7 +260,8 @@ commonAction.doWatchTasks = function (tasklist) {
                     sleep(2000);
                 } else {
                     if (closeBtn == null) {
-                        log("swipe " + swipe(device.width / 2, device.height * 7 / 8, device.width / 2, device.height / 8, 1000));
+                        var swipeXY = swipeChoice[Math.floor(Math.random() * swipeChoice.length)];
+                        log("swipe " + swipe(device.width / 2, swipeXY[0], device.width / 2, swipeXY[1], 1000));
                     }
                     sleep(interval);
                 }

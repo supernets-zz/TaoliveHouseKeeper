@@ -41,6 +41,9 @@ collectStrength = function (signTips) {
     // 不管三七二十一，点一下收集体力
     log("点击 收集体力: " + click(signTips.bounds().width() / 4, signTips.bounds().centerY() - signTips.bounds().height() * 3));
     sleep(1000);
+
+    common.safeSet(common.lastWorkToEarnCollectTag, Math.floor(new Date().getTime() / 1000));
+
     // 要么出提示，要么弹任务框
     var getBtn = textMatches(/去领体力/).findOne(1000);
     if (getBtn != null) {
@@ -73,25 +76,31 @@ collectStrength = function (signTips) {
     }
 
     log("点击 去打工赚钱: " + workBtn.click());
-    var workChoice = WaitForText("text", "选工作 赚元宝", true, 10);
+    var workChoice = common.waitForText("text", "选工作 赚元宝", true, 10);
     if (workChoice == null) {
         return;
     }
 
     var objs = [];
-    queryList(workChoice.parent(), 0, objs);
+    common.queryList(workChoice.parent(), 0, objs);
     //开始打工按钮
     var startBtn = objs[2];
 
     var jobs = textMatches(/歌手|厨师|带货/).visibleToUser(true).find();
     for (var i = 0; i < jobs.length; i++) {
         if (jobs[i].text() == "厨师") { //每100体力产出的元宝最高，体力不足时等待体力足了再工作
-            log(jobs[i].text() + ": " + click(jobs[i].bounds().centerX(), jobs[i].bounds().centerY()));
+            log("点击 " + jobs[i].text() + ": " + click(jobs[i].bounds().centerX(), jobs[i].bounds().centerY()));
             sleep(1000);
-            log(startBtn.text());
+            //体力不足时选择高体力职业按钮文字会提示体力不足
+            log("选择打工类型后开始按钮文字: " + startBtn.text());
             if (startBtn.text() == "开始打工") {
-                startBtn.click();
+                log("点击 " + startBtn.text() + ": " + startBtn.click());
+                sleep(1000);
             }
+
+            //不管能否成功打工，点击"选工作 赚元宝"上面一点关闭工作选择弹窗
+            log("关闭工作选择提示: " + click(workChoice.bounds().centerX(), workChoice.bounds().centerY() - workChoice.bounds().height() * 4));
+            sleep(1000);
             break;
         }
     }
@@ -323,6 +332,12 @@ workToEarn.doWorkRoutineTasks = function () {
         }
 
         watchTaskList = common.filterTaskList(watchTaskList, validTaskNames)
+        var lastWalkToEarnCollectTimestamp = common.safeGet(common.lastWalkToEarnCollectTag);
+        log("上次走路赚元宝采集时间戳: " + common.timestampToTime(lastWalkToEarnCollectTimestamp * 1000) + ", watchTaskList: " + watchTaskList.length);
+        if (watchTaskList.length > 0 && new Date().getTime() / 1000 - lastWalkToEarnCollectTimestamp > common.lastCollectTimeout) {
+            log("暂停观看视频任务，先去 走路赚元宝 领步数");
+            break;
+        }
         if (commonAction.doWatchTasks(watchTaskList)) {
             //等待成功提示消失
             sleep(3000);

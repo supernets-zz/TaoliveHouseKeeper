@@ -41,6 +41,8 @@ collectSteps = function (walkBtn) {
     // 等待提示消失
     sleep(5000);
 
+    common.safeSet(common.lastWalkToEarnCollectTag, Math.floor(new Date().getTime() / 1000));
+
     //出发按钮为其父节点的第三个控件
     var objs = [];
     common.queryList(walkBtn.parent(), 0, objs);
@@ -57,7 +59,8 @@ collectSteps = function (walkBtn) {
     if (getBtn != null) {
         var objs = [];
         common.queryList(getBtn.parent().parent(), 0, objs);
-        log(getBtn.text() + " 关闭: " + click(objs[1].bounds().centerX(), objs[1].bounds().centerY()));
+        log("遇" + getBtn.text() + " 提示，点击 关闭: " + click(objs[1].bounds().centerX(), objs[1].bounds().centerY()));
+        sleep(1000);
     }
 
     //领飘在上面的元宝
@@ -66,7 +69,7 @@ collectSteps = function (walkBtn) {
         log("点击 " + tocollectCoins[i].text() + ": " + click(tocollectCoins[i].bounds().centerX(), tocollectCoins[i].bounds().centerY()));
         var tips = textContains("成功领取元宝").findOne(1000);
         if (tips != null) {
-            log("close: " + click(tips.bounds().right, tips.bounds().top - tips.bounds().height()));
+            log("遇 成功领取元宝 提示，点击 关闭: " + click(tips.bounds().right, tips.bounds().top - tips.bounds().height()));
             sleep(1000);
         }
     }
@@ -258,6 +261,12 @@ walkToEarn.doWalkRoutineTasks = function () {
         }
 
         watchTaskList = common.filterTaskList(watchTaskList, validTaskNames)
+        var lastWorkToEarnCollectTimestamp = common.safeGet(common.lastWorkToEarnCollectTag);
+        log("上次打工赚元宝采集时间戳: " + common.timestampToTime(lastWorkToEarnCollectTimestamp * 1000) + ", watchTaskList: " + watchTaskList.length);
+        if (watchTaskList.length > 0 && new Date().getTime() / 1000 - lastWorkToEarnCollectTimestamp > common.lastCollectTimeout) {
+            log("暂停观看视频任务，先去 打工赚元宝 领体力");
+            break;
+        }
         if (commonAction.doWatchTasks(watchTaskList)) {
             walkBtn = common.waitForText("text", "出发", true, 10);
             if (walkBtn == null) {
