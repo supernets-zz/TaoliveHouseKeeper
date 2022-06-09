@@ -11,7 +11,6 @@ common.lastCollectTimeout = 10 * 60;    //采集超时时间
 var storagelock = threads.lock();
 var localStorages = storages.create(common.appName+":global");
 
-
 common.timestampToTime = function (timestamp) {
     var date = new Date(timestamp);//时间戳为10位需*1000，时间戳为13位的话不需乘1000
     var Y = date.getFullYear() + '-';

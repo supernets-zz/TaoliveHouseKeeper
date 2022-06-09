@@ -144,7 +144,7 @@ threads.start(function(){
         if (allComplete && ret) {
             var now = new Date().getTime();
             var nextCheckTime = parseInt((now + execInterval * 1000) / (execInterval * 1000)) * (execInterval * 1000);
-            log((nextCheckTime - now) + "s 后的 " + common.timestampToTime(nextCheckTime) + " 进行下一次检查");
+            log(Math.floor(nextCheckTime - now) / 1000 + "s 后的 " + common.timestampToTime(nextCheckTime) + " 进行下一次检查");
             sleep(nextCheckTime - now);
         }
     }
@@ -153,6 +153,7 @@ threads.start(function(){
 function isAllDailyTaskComplete() {
     var nowDate = new Date().Format("yyyy-MM-dd");
     var taskList = [];
+    taskList.push.apply(taskList, shakeToEarn.dailyJobs);
     taskList.push.apply(taskList, walkToEarn.dailyJobs);
     taskList.push.apply(taskList, workToEarn.dailyJobs);
     for (var i = 0; i < taskList.length; i++) {
@@ -183,6 +184,9 @@ function mainWorker() {
             toastLog("Taolive is unknown status");
             captureScreen("/sdcard/Download/" + (new Date().Format("yyyy-MM-dd HH:mm:ss")) + ".png");
         } else {
+            // 浏览我的-> 元宝中心-> 摇一摇赚元宝 主页，时有时无
+            shakeToEarn.doShakeMainBrowse();
+
             // 浏览我的-> 元宝中心-> 走路赚元宝 主页，每日一次
             walkToEarn.doWalkMainBrowse();
             // 浏览我的-> 元宝中心-> 走路赚元宝 街区提示，每日一次
@@ -195,15 +199,12 @@ function mainWorker() {
             // 浏览我的-> 元宝中心-> 打工赚元宝 旺市，每日一次
             workToEarn.doWorkMarketBrowse();
 
-            // 浏览我的-> 元宝中心-> 摇一摇赚元宝 主页，时有时无
-            shakeToEarn.doShakeMainBrowse();
-
+            // 我的-> 元宝中心-> 摇一摇赚元宝，浏览xx、看视频、看直播
+            shakeToEarn.doShakeRoutineTasks();
             // 我的-> 元宝中心-> 走路赚元宝，浏览xx、看视频、看直播
             walkToEarn.doWalkRoutineTasks();
             // 我的-> 元宝中心-> 打工赚元宝，浏览xx、看视频、看直播
             workToEarn.doWorkRoutineTasks();
-            // 我的-> 元宝中心-> 摇一摇赚元宝，浏览xx、看视频、看直播
-            shakeToEarn.doShakeRoutineTasks();
             ret = true;
         }
 	} catch(e) {

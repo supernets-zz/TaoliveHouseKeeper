@@ -6,12 +6,23 @@ var commonAction = require("./commonAction.js");
 const browseTag = "走路赚元宝浏览首页";
 const streetTag = "走路赚元宝浏览街区";
 
+//收益正常才允许每日首次进入，否则元宝只有1/10，首次进入后后面随意进出
+walkToEarn.permissionTag = "走路赚元宝准入";
+
 walkToEarn.dailyJobs = [];
 walkToEarn.dailyJobs.push(browseTag);
 walkToEarn.dailyJobs.push(streetTag);
 
 gotoWalkEarnCoins = function () {
     var walkBtn = null;
+
+    var nowDate = new Date().Format("yyyy-MM-dd");
+    var permission = common.safeGet(nowDate + ":" + walkToEarn.permissionTag);
+    if (permission == null) {
+        log(walkToEarn.permissionTag + " : " + permission);
+        return walkBtn;
+    }
+
     if (!commonAction.gotoCoinCenter()) {
         return walkBtn;
     }
@@ -35,41 +46,94 @@ gotoWalkEarnCoins = function () {
 }
 
 //喝能量饮料、点出发收集步数、收集飘在鸭子头顶上的元宝
-collectSteps = function (walkBtn) {
-    // 不管三七二十一，点一下能量饮料
-    log("点击 能量饮料: " + click(walkBtn.bounds().width(), walkBtn.bounds().centerY()));
-    // 等待提示消失
-    sleep(5000);
+//能量饮料：
+//15秒      50步
+//30秒      75步
+//1分钟     100步
+//2分钟     150步
+//3分钟     200步
+//4分钟     250步
+//5分钟     300步
+//10分钟    350步
+//15分钟    400步
+//20分钟    450步
+//30分钟    500步
+//2小时     1000步
+collectSteps = function () {
+    //出发按钮
+    var walkBtn = text("出发").findOne(1000);
+    if (walkBtn == null) {
+        return;
+    }
+
+    sleep(1000);
+    //可用步数
+    var stepsTips = parseInt(walkBtn.parent().child(1).text());
+    log("可用步数: " + stepsTips);
+
+    //能量饮料、出发、赚步数的父节点
+    var threeBtnsBar = walkBtn.parent().parent().parent();
+    var energyBtn = threeBtnsBar.child(0);
+    var startBtn = threeBtnsBar.child(1).child(0);
+    var earnBtn = threeBtnsBar.child(2);
+    var energyLeftTime = energyBtn.child(1);
+    var energySteps = "0";
+    if (energyLeftTime.text() != "明日再来") {
+        energySteps = energyBtn.child(2).text();
+    }
+
+    log("能量饮料剩余时间: " + energyLeftTime.text() + ", 可领取步数: " + energySteps);
+    if (energyLeftTime.text() == "领取") {
+        log("点击 能量饮料: " + energyBtn.click());
+        // 等待提示消失
+        sleep(5000);
+        stepsTips = parseInt(walkBtn.parent().child(1).text());
+        log("领取能量饮料后可用步数: " + walkBtn.parent().child(1).text());
+    }
 
     common.safeSet(common.lastWalkToEarnCollectTag, Math.floor(new Date().getTime() / 1000));
 
-    //出发按钮为其父节点的第三个控件
-    var objs = [];
-    common.queryList(walkBtn.parent(), 0, objs);
-    if (objs.length == 3) {
-        log(objs[0].text() + ": " + objs[1].text());
-        if (parseInt(objs[1].text()) > 0) {
-            log("点击 出发: " + click(walkBtn.bounds().centerX(), walkBtn.bounds().centerY()));
+    //可用步数不为零才点出发
+    if (stepsTips > 0) {
+        log("点击 出发: " + startBtn.click());
+        //如果弹提示框了，点关闭
+        var getStepsTips = textMatches(/去领步数/).findOne(5000);
+        if (getStepsTips != null) {
+            var dlgCloseBtn = getStepsTips.parent().parent().child(1);
+            log("遇" + getStepsTips.text() + " 提示，点击 关闭: " + dlgCloseBtn.click());
             sleep(1000);
         }
-    }    
-
-    //如果弹提示框了，点关闭
-    var getBtn = textMatches(/去领步数/).findOne(1000);
-    if (getBtn != null) {
-        var objs = [];
-        common.queryList(getBtn.parent().parent(), 0, objs);
-        log("遇" + getBtn.text() + " 提示，点击 关闭: " + click(objs[1].bounds().centerX(), objs[1].bounds().centerY()));
-        sleep(1000);
     }
 
-    //领飘在上面的元宝
+    //根据当前步数领飘在上面的元宝
+    var curSteps = textMatches(/当前步数\d+/).findOne(1000);
+    if (curSteps == null) {
+        return;
+    }
+
+    log(curSteps.text());
+    var curStepNum = parseInt(curSteps.text().match(/\d+/));
     var tocollectCoins = textMatches(/\d+元宝\d+步/).find();
-    for (var i = 0; i < tocollectCoins.length; i++) {
-        log("点击 " + tocollectCoins[i].text() + ": " + click(tocollectCoins[i].bounds().centerX(), tocollectCoins[i].bounds().centerY()));
-        var tips = textContains("成功领取元宝").findOne(1000);
+    var validCoins = [];
+    tocollectCoins.forEach(function (tv) {
+        var canGetSteps = parseInt(tv.text().match(/\d+/g)[1]);
+        //当前步数不小于飘在空中的步数才去领
+        if (curStepNum >= canGetSteps) {
+            validCoins.push(tv);
+        } else {
+            log("未达条件: " + tv.text());
+        }
+    });
+
+    if (validCoins.length > 0) {
+        for (var i = 0; i < validCoins.length; i++) {
+            log("点击 " + validCoins[i].text() + ": " + validCoins[i].click());
+        }
+
+        var tips = textContains("成功领取元宝").findOne(5000);
         if (tips != null) {
-            log("遇 成功领取元宝 提示，点击 关闭: " + click(tips.bounds().right, tips.bounds().top - tips.bounds().height()));
+            var dlgCloseBtn = tips.parent().parent().child(1);
+            log("遇 成功领取元宝 提示，点击 关闭: " + dlgCloseBtn.click());
             sleep(1000);
         }
     }
@@ -157,7 +221,7 @@ walkToEarn.doWalkRoutineTasks = function () {
         return;
     }
 
-    collectSteps(walkBtn);
+    collectSteps();
 
     //赚步数按钮坐标
     var earnStepsBtnX = walkBtn.bounds().centerX() + walkBtn.bounds().width() * 2;
@@ -184,10 +248,10 @@ walkToEarn.doWalkRoutineTasks = function () {
         var validTasks = packageName(common.taolivePackageName).text("得步数").visibleToUser(true).find();
 
         for (var i = 0; i < validTasks.length; i++) {
-            var objs = [];
-            common.queryList(validTasks[i].parent(), 0, objs);
-            if (objs.length == 7 && objs[5].bounds().height() > 50 || objs.length == 6 && objs[4].bounds().height() > 50) {
-                validTaskNames.push(objs[0].text());
+            var taskItem = validTasks[i].parent();
+            var btn = taskItem.child(taskItem.length - 2);
+            if (btn.bounds().height() > 50) {
+                validTaskNames.push(taskItem.child(0).text());
             }
         }
         toastLog("任务数: " + totalTasks.length + ", 可见: " + validTaskNames.length + ", " + validTaskNames);
@@ -198,20 +262,9 @@ walkToEarn.doWalkRoutineTasks = function () {
         }
 
         totalTasks.forEach(function(tv) {
-            var objs = [];
-            var title = "";
-            var btn = null;
-            common.queryList(tv.parent(), 0, objs);
-            title = objs[0].text();
-            if (objs.length == 7) {
-                btn = objs[5];
-            } else if (objs.length == 6) {
-                btn = objs[4];
-            } else {
-                for (var k = 0;k < objs.length; k++) {
-                    log("第" + k + "个子控件" + objs[k]);
-                }
-            }
+            var taskItem = tv.parent();
+            var title = taskItem.child(0).text();
+            var btn = taskItem.child(taskItem.length - 2);
             if (btn != null) {
                 if (/去完成|去浏览/.test(btn.text()) && title.indexOf("邀请") == -1 && title.indexOf("支付宝") == -1) {
                     var obj = {};
@@ -244,7 +297,7 @@ walkToEarn.doWalkRoutineTasks = function () {
             }
             //等待成功提示消失
             sleep(3000);
-            collectSteps(walkBtn);
+            collectSteps();
             continue;
         }
 
@@ -256,17 +309,11 @@ walkToEarn.doWalkRoutineTasks = function () {
             }
             //等待成功提示消失
             sleep(3000);
-            collectSteps(walkBtn);
+            collectSteps();
             continue;
         }
 
         watchTaskList = common.filterTaskList(watchTaskList, validTaskNames)
-        var lastWorkToEarnCollectTimestamp = common.safeGet(common.lastWorkToEarnCollectTag);
-        log("上次打工赚元宝采集时间戳: " + common.timestampToTime(lastWorkToEarnCollectTimestamp * 1000) + ", watchTaskList: " + watchTaskList.length);
-        if (watchTaskList.length > 0 && new Date().getTime() / 1000 - lastWorkToEarnCollectTimestamp > common.lastCollectTimeout) {
-            log("暂停观看视频任务，先去 打工赚元宝 领体力");
-            break;
-        }
         if (commonAction.doWatchTasks(watchTaskList)) {
             walkBtn = common.waitForText("text", "出发", true, 10);
             if (walkBtn == null) {
@@ -274,7 +321,7 @@ walkToEarn.doWalkRoutineTasks = function () {
             }
             //等待成功提示消失
             sleep(3000);
-            collectSteps(walkBtn);
+            collectSteps();
             continue;
         }
     }

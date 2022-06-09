@@ -13,95 +13,128 @@ workToEarn.dailyJobs.push(browseTag);
 workToEarn.dailyJobs.push(marketTag);
 
 gotoWorkEarnCoins = function () {
-    var workBtn = null;
     if (!commonAction.gotoCoinCenter()) {
-        return workBtn;
+        return null;
     }
 
-    workBtn = common.waitForText("text", "打工赚元宝", true, 10);
+    var workBtn = common.waitForText("text", "打工赚元宝", true, 10);
     if (workBtn == null) {
-        return workBtn;
+        return null;
     }
 
-    var clickRet = click(workBtn.bounds().centerX(), workBtn.bounds().centerY() - workBtn.bounds().height() * 3);
+    var clickRet = workBtn.parent().click();
     log("点击 打工赚元宝: " + clickRet);
     if (clickRet == false) {
-        return workBtn;
+        return null;
     }
 
-    //"去打工赚钱"在工作的时候不会出现，但"连续签到..."一定存在
-    workBtn = common.waitForTextMatches(/连续签到 \d\/7 天 拿大礼包/, true, 10);
-    if (workBtn == null) {
-        return workBtn;
-    }
-    return workBtn;
+    //按钮"去打工赚钱"在工作的时候不会出现，但"连续签到..."一定存在
+    var signTips = common.waitForTextMatches(/连续签到 \d\/7 天 拿大礼包/, true, 10);
+    return signTips;
 }
 
-collectStrength = function (signTips) {
-    // 不管三七二十一，点一下收集体力
-    log("点击 收集体力: " + click(signTips.bounds().width() / 4, signTips.bounds().centerY() - signTips.bounds().height() * 3));
-    sleep(1000);
+//领体力
+//0秒       100体力
+//30秒      75体力
+//1分钟     50体力
+//1分30秒   50体力
+//3分钟     75体力
+//5分钟     100体力
+//10分钟    100体力
+//30分钟    175体力
+//1小时     300体力
+//3小时     1000体力
+collectStrength = function () {
+    //签到提示
+    var signTips = textMatches(/连续签到 \d\/7 天 拿大礼包/).findOne(1000);
+    if (signTips == null) {
+        return;
+    }
+
+    //体力值
+    var strengthBalance = 0
+    var exchangeBtn = text("兑换").findOne(1000);
+    if (exchangeBtn != null) {
+        strengthBalance = parseInt(exchangeBtn.parent().child(4).text());
+    }
+    log("体力值: " + strengthBalance);
+
+    //领取体力、打工、赚体力的父节点
+    var threeBtnsBar = signTips.parent().parent().parent().child(0);
+    var getStrengthBtn = threeBtnsBar.child(0);
+    var canGetStrength = "";    // 体力领完了就没有了
+    if (getStrengthBtn.child(0).className() == "android.view.View") {
+        canGetStrength = getStrengthBtn.child(0).text();
+    }
+    var strengthLeftTime = "";
+    for (var i = 1; i < getStrengthBtn.childCount(); i++) {
+        if (getStrengthBtn.child(i).className() == "android.view.View") {
+            strengthLeftTime = strengthLeftTime + getStrengthBtn.child(i).text();
+        }
+    }
+    var workBtn = threeBtnsBar.child(1);
+    var earnBtn = threeBtnsBar.child(2);
+
+    if (/\d+:\d+:\d+/.test(strengthLeftTime)) {
+        log(strengthLeftTime + " 后 " + canGetStrength);
+    } else if (strengthLeftTime == "领取") {
+        log("点击 收集体力: " + getStrengthBtn.click());
+        // 要么出提示，不需要点击，要么弹任务框需要点击关闭
+        var getStrengthTips = textMatches(/去领体力/).findOne(5000);
+        if (getStrengthTips != null) {
+            var dlgCloseBtn = getStrengthTips.parent().parent().child(1);
+            log(getStrengthTips.text() + " 关闭: " + dlgCloseBtn.click());
+            sleep(1000);
+        }
+        strengthBalance = parseInt(exchangeBtn.parent().child(4).text());
+        log("新体力值: " + strengthBalance);
+    } else {
+        log("体力剩余时间: " + strengthLeftTime);
+    }
 
     common.safeSet(common.lastWorkToEarnCollectTag, Math.floor(new Date().getTime() / 1000));
 
-    // 要么出提示，要么弹任务框
-    var getBtn = textMatches(/去领体力/).findOne(1000);
-    if (getBtn != null) {
-        var objs = [];
-        common.queryList(getBtn.parent().parent(), 0, objs);
-        log(getBtn.text() + " 关闭: " + click(objs[1].bounds().centerX(), objs[1].bounds().centerY()));
-    } else {
-        sleep(3000);
-    }
-
     //打工完成了先点击领取元宝，再选工作继续打工赚钱
-    var getBtn = textMatches(/领取\d+元宝/).visibleToUser(true).findOne(1000);
-    if (getBtn != null) {
-        log("点击 " + getBtn.text() + ": " + getBtn.click());
+    if (/领取\d+元宝/.test(workBtn.text())) {
+        log("点击 " + workBtn.text() + ": " + workBtn.click());
         sleep(1000);
+        //弹出领取成功对话框，点击关闭
         var getTips = text("恭喜获得元宝").findOne(1000);
         if (getTips != null) {
-            var objs = [];
-            queryList(getTips.parent(), 0, objs);
-            log("点击 关闭: " + objs[0].click());
+            log("点击 关闭: " + getTips.parent().child(0).click());
             sleep(1000);
         }
     }
 
-    // 去打工赚钱 按钮
-    var workBtn = text("去打工赚钱").visibleToUser(true).findOne(1000);
-    if (workBtn == null) {
-        log("打工ing...");
-        return;
-    }
+    if (workBtn.text() == "去打工赚钱") {
+        log("点击 去打工赚钱: " + workBtn.click());
+        var workChoice = common.waitForText("text", "选工作 赚元宝", true, 10);
+        if (workChoice == null) {
+            return;
+        }
 
-    log("点击 去打工赚钱: " + workBtn.click());
-    var workChoice = common.waitForText("text", "选工作 赚元宝", true, 10);
-    if (workChoice == null) {
-        return;
-    }
+        var objs = [];
+        common.queryList(workChoice.parent(), 0, objs);
+        //开始打工按钮
+        var startBtn = objs[2];
 
-    var objs = [];
-    common.queryList(workChoice.parent(), 0, objs);
-    //开始打工按钮
-    var startBtn = objs[2];
-
-    var jobs = textMatches(/歌手|厨师|带货/).visibleToUser(true).find();
-    for (var i = 0; i < jobs.length; i++) {
-        if (jobs[i].text() == "厨师") { //每100体力产出的元宝最高，体力不足时等待体力足了再工作
-            log("点击 " + jobs[i].text() + ": " + click(jobs[i].bounds().centerX(), jobs[i].bounds().centerY()));
-            sleep(1000);
-            //体力不足时选择高体力职业按钮文字会提示体力不足
-            log("选择打工类型后开始按钮文字: " + startBtn.text());
-            if (startBtn.text() == "开始打工") {
-                log("点击 " + startBtn.text() + ": " + startBtn.click());
+        var jobs = textMatches(/歌手|厨师|带货/).visibleToUser(true).find();
+        for (var i = 0; i < jobs.length; i++) {
+            if (jobs[i].text() == "厨师") { //每100体力产出的元宝最高，体力不足时等待体力足了再工作
+                log("点击 " + jobs[i].text() + ": " + click(jobs[i].bounds().centerX(), jobs[i].bounds().centerY()));
                 sleep(1000);
-            }
+                //体力不足时选择高体力职业按钮文字会提示体力不足
+                log("选择打工类型后开始按钮文字: " + startBtn.text());
+                if (startBtn.text() == "开始打工") {
+                    log("点击 " + startBtn.text() + ": " + startBtn.click());
+                    sleep(1000);
+                }
 
-            //不管能否成功打工，点击"选工作 赚元宝"上面一点关闭工作选择弹窗
-            log("关闭工作选择提示: " + click(workChoice.bounds().centerX(), workChoice.bounds().centerY() - workChoice.bounds().height() * 4));
-            sleep(1000);
-            break;
+                //不管能否成功打工，点击"选工作 赚元宝"上面一点关闭工作选择弹窗
+                log("关闭工作选择提示: " + click(workChoice.bounds().centerX(), workChoice.bounds().centerY() - workChoice.bounds().height() * 4));
+                sleep(1000);
+                break;
+            }
         }
     }
 }
@@ -131,20 +164,19 @@ workToEarn.doWorkDailySign = function () {
     if (tips.text().indexOf("6/7") != -1) {
         common.safeSet(nowDate + ":" + signTag, "no need");
         toastLog("不领元宝券 " + signTag);
-    }
-
-    //打工签到
-    var objs = [];
-    common.queryList(tips.parent(), 0, objs);
-    if (objs[1].text() == "已签到") {
-        common.safeSet(nowDate + ":" + signTag, "done");
-        toastLog("已签到 " + signTag);
     } else {
-        var clickRet = objs[1].click();
-        log("签到 :" + clickRet);
-        if (clickRet) {
+        //打工签到
+        var signBtn = tips.parent().child(1);
+        if (signBtn.text() == "已签到") {
             common.safeSet(nowDate + ":" + signTag, "done");
-            toastLog("完成 " + signTag);
+            toastLog("已签到 " + signTag);
+        } else {
+            var clickRet = signBtn.click();
+            log("签到 :" + clickRet);
+            if (clickRet) {
+                common.safeSet(nowDate + ":" + signTag, "done");
+                toastLog("完成 " + signTag);
+            }
         }
     }
 
@@ -234,18 +266,20 @@ workToEarn.doWorkRoutineTasks = function () {
         return;
     }
 
-    collectStrength(signTips);
+    collectStrength();
 
     //赚体力按钮坐标
-    var earnStrengthBtnX = device.width - signTips.bounds().width() / 4;
-    var earnStrengthBtnY = signTips.bounds().centerY() - signTips.bounds().height() * 3;
+    //领取体力、打工、赚体力的父节点
+    var threeBtnsBar = signTips.parent().parent().parent().child(0);
+    var earnBtn = threeBtnsBar.child(2);
     for (;;) {
-        clickRet = click(earnStrengthBtnX, earnStrengthBtnY);
-        log("点击 赚体力(" + earnStrengthBtnX + ", " + earnStrengthBtnY + "): " + clickRet);
+        var clickRet = earnBtn.click();
+        log("点击 赚体力(" + earnBtn.bounds().centerX() + ", " + earnBtn.bounds().centerY() + "): " + clickRet);
         if (clickRet == false) {
             commonAction.backTaoliveMainPage();
             return;
         }
+        sleep(1000);
 
         var taskDetails = common.waitForText("text", "得体力", true, 10);
         if (taskDetails == null) {
@@ -261,10 +295,10 @@ workToEarn.doWorkRoutineTasks = function () {
         var validTasks = packageName(common.taolivePackageName).text("得体力").visibleToUser(true).find();
 
         for (var i = 0; i < validTasks.length; i++) {
-            var objs = [];
-            common.queryList(validTasks[i].parent(), 0, objs);
-            if (objs.length == 7 && objs[5].bounds().height() > 50 || objs.length == 6 && objs[4].bounds().height() > 50) {
-                validTaskNames.push(objs[0].text());
+            var taskItem = validTasks[i].parent();
+            var btn = taskItem.child(taskItem.length - 2);
+            if (btn.bounds().height() > 50) {
+                validTaskNames.push(taskItem.child(0).text());
             }
         }
         toastLog("任务数: " + totalTasks.length + ", 可见: " + validTaskNames.length + ", " + validTaskNames);
@@ -276,25 +310,17 @@ workToEarn.doWorkRoutineTasks = function () {
 
         totalTasks.forEach(function(tv) {
             var objs = [];
-            var title = "";
-            var btn = null;
-            common.queryList(tv.parent(), 0, objs);
-            title = objs[0].text();
-            if (objs.length == 7) {
-                btn = objs[5];
-            } else if (objs.length == 6) {
-                btn = objs[4];
-            } else {
-                for (var k = 0;k < objs.length; k++) {
-                    log("第" + k + "个子控件" + objs[k]);
-                }
-            }
+            var taskItem = tv.parent();
+            var title = taskItem.child(0).text();
+            var btn = taskItem.child(taskItem.length - 2);
             if (btn != null) {
                 if (/去完成|去浏览/.test(btn.text()) && 
                     title.indexOf("邀请") == -1 && 
                     title.indexOf("支付宝") == -1 && 
                     title.indexOf("人脉价值") == -1 &&
-                    title.indexOf("真香秒杀") == -1) {
+                    title.indexOf("真香秒杀") == -1 &&
+                    title.indexOf("评论") == -1 &&
+                    title.indexOf("淘特") == -1) {
                     var obj = {};
                     obj.Title = title;
                     obj.BtnName = btn.text();
@@ -332,12 +358,6 @@ workToEarn.doWorkRoutineTasks = function () {
         }
 
         watchTaskList = common.filterTaskList(watchTaskList, validTaskNames)
-        var lastWalkToEarnCollectTimestamp = common.safeGet(common.lastWalkToEarnCollectTag);
-        log("上次走路赚元宝采集时间戳: " + common.timestampToTime(lastWalkToEarnCollectTimestamp * 1000) + ", watchTaskList: " + watchTaskList.length);
-        if (watchTaskList.length > 0 && new Date().getTime() / 1000 - lastWalkToEarnCollectTimestamp > common.lastCollectTimeout) {
-            log("暂停观看视频任务，先去 走路赚元宝 领步数");
-            break;
-        }
         if (commonAction.doWatchTasks(watchTaskList)) {
             //等待成功提示消失
             sleep(3000);

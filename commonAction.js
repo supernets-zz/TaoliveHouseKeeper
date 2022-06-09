@@ -127,16 +127,33 @@ commonAction.gotoCoinCenter = function () {
         return ret;
     }
 
-    var objs = [];
-    common.queryList(coinCenter.parent(), 0, objs);
-    log("我的元宝: " + objs[0].text() + ", 今日已赚: " + objs[3].text());
+    log("我的元宝: " + coinCenter.parent().child(0).text() + ", 今日已赚: " + coinCenter.parent().child(3).text());
 
     //如果弹提示框了，点关闭
     var getBtn = textMatches(/去领步数/).findOne(1000);
     if (getBtn != null) {
-        var objs = [];
-        common.queryList(getBtn.parent().parent(), 0, objs);
-        log(getBtn.text() + " 关闭: " + click(objs[1].bounds().centerX(), objs[1].bounds().centerY()));
+        var dlgCloseBtn = getBtn.parent().parent().child(1);
+        log(getBtn.text() + " 关闭: " + dlgCloseBtn.click());
+    }
+
+    // 元宝中心右上角金蛋
+    var childNum = coinCenter.parent().parent().parent().parent().childCount();
+    if (childNum == 6) {
+        var goldEggBtn = coinCenter.parent().parent().parent().parent().child(5);
+        //连击三次有惊喜哦
+        for (var i = 0; i < 3; i++) {
+            log(goldEggBtn.click());
+            sleep(200);
+        }
+        sleep(1000);
+        var tips = textMatches(/看直播\d+秒得\d+元宝|我知道了/).findOne(1000);
+        if (tips != null) {
+            var closeBtn = tips.parent().parent().child(2);
+            log(closeBtn.click());
+            sleep(1000);
+        }
+    } else {
+        log("没有金蛋");
     }
 
     ret = true;
@@ -151,6 +168,9 @@ commonAction.scrollThrough = function (txt, timeout) {
         var slide = textContains(txt).visibleToUser(true).findOne(1000);
         nowTime = parseInt(new Date().getTime() / 1000);
         log("slide tips: " + (slide != null) + ", " + (nowTime - startTime) + "s");
+        if (slide != null) {
+            log("slide.bounds().height(): " + slide.bounds().height());
+        }
         if (slide == null || nowTime - startTime > timeout || slide != null && slide.bounds().height() < 10) {
             break;
         }
@@ -244,11 +264,15 @@ commonAction.doWatchTasks = function (tasklist) {
                 //红包雨弹窗提示
                 var rule = text("活动规则").findOne(1000);
                 if (rule != null) {
-                    var objs = [];
-                    common.queryList(rule.parent().parent().parent(), 0, objs);
-                    log("红包雨弹窗 关闭: " + objs[0].click());
+                    var dlgCloseBtn = rule.parent().parent().parent().child(0);
+                    log("红包雨弹窗 关闭: " + dlgCloseBtn.click());
                 }
 
+                var tryAgainBtn = text("再来一次").findOne(1000);
+                if (tryAgainBtn != null) {
+                    var dlgCloseBtn = tryAgainBtn.parent().parent().parent().child(1);
+                    log("啊哦，这次没抢到红包 关闭: " + dlgCloseBtn.click());
+                }
                 nowTime = parseInt(new Date().getTime() / 1000);
                 //十五分钟超时，最长的任务是8分钟
                 if (nowTime - startTime > 15 * 60) {
