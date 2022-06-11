@@ -56,6 +56,7 @@ gotoWalkEarnCoins = function () {
 //20分钟    450步
 //30分钟    500步
 //2小时     1000步
+//4小时     1250步
 collectSteps = function () {
     //出发按钮
     var walkBtn = text("出发").findOne(1000);
@@ -91,32 +92,14 @@ collectSteps = function () {
     //根据能量饮料剩余时间计算临近的下次检查时间
     energyLeftTime = energyBtn.child(1);
     log("下次能量饮料剩余时间: " + energyLeftTime.text());
-    var now = new Date().getTime();
-    var orgNextWallCheckTimestamp = parseInt(common.safeGet(common.nextWalkCheckTimestampTag));
-    //检查时间过期了置为null
-    if (!isNaN(orgNextWallCheckTimestamp) && now > orgNextWallCheckTimestamp) {
-        common.safeSet(common.nextWalkCheckTimestampTag, null);
-        log(common.nextWalkCheckTimestampTag + " 过期: " + common.timestampToTime(orgNextWallCheckTimestamp));
-    }
-
+    var curDate = new Date().Format("yyyy/MM/dd");
+    var newNextWalkCheckTimestamp = new Date(curDate + " 24:00:00").getTime();
     if (/\d+:\d+:\d+/.test(energyLeftTime.text())) {
         var HHmmss = energyLeftTime.text().match(/\d+/g);
-        var newNextWalkCheckTimestamp = now + (parseInt(HHmmss[0]) * 3600 + parseInt(HHmmss[1]) * 60 + parseInt(HHmmss[2])) * 1000;
-        log("下次领取饮料时间: " + common.timestampToTime(newNextWalkCheckTimestamp));
-        var orgNextWalkCheckTimestamp = parseInt(common.safeGet(common.nextWalkCheckTimestampTag));
-        if (!isNaN(orgNextWalkCheckTimestamp)) {
-            //检查时间没过期，看是否比原来的近，近就更新
-            if (newNextWalkCheckTimestamp < orgNextWalkCheckTimestamp) {
-                common.safeSet(common.nextWalkCheckTimestampTag, newNextWalkCheckTimestamp);
-                log(common.nextWalkCheckTimestampTag + " 从 " + common.timestampToTime(orgNextWalkCheckTimestamp) + " 更新为: " + common.timestampToTime(newNextWalkCheckTimestamp));
-            } else {
-                log(common.nextWalkCheckTimestampTag + "不变: " + common.timestampToTime(orgNextWalkCheckTimestamp));
-            }
-        } else {
-            common.safeSet(common.nextWalkCheckTimestampTag, newNextWalkCheckTimestamp);
-            log(common.nextWalkCheckTimestampTag + " 设置为: " + common.timestampToTime(newNextWalkCheckTimestamp));
-        }
+        newNextWalkCheckTimestamp = new Date().getTime() + (parseInt(HHmmss[0]) * 3600 + parseInt(HHmmss[1]) * 60 + parseInt(HHmmss[2])) * 1000;
     }
+    common.safeSet(common.nextWalkCheckTimestampTag, newNextWalkCheckTimestamp);
+    log(common.nextWalkCheckTimestampTag + " 设置为: " + common.timestampToTime(newNextWalkCheckTimestamp));
 
     //可用步数不为零才点出发
     if (stepsTips > 0) {
@@ -265,114 +248,120 @@ walkToEarn.doWalkRoutineTasks = function () {
             return;
         }
 
-        var shortBrowseTaskList = [];   //短时浏览任务列表，浏览完成后返回
-        var browseTaskList = [];    //浏览任务列表，滑动浏览完成后返回
-        var searchTaskList = [];    //搜索任务列表，搜索后返回
-        var watchTaskList = [];     //观看任务列表，需要多次折返
-        var validTaskNames = [];
-        var totalTasks = packageName(common.taolivePackageName).text("得步数").find();
-        var validTasks = packageName(common.taolivePackageName).text("得步数").visibleToUser(true).find();
+        for (;;) {
+            var shortBrowseTaskList = [];   //短时浏览任务列表，浏览完成后返回
+            var browseTaskList = [];    //浏览任务列表，滑动浏览完成后返回
+            var searchTaskList = [];    //搜索任务列表，搜索后返回
+            var watchTaskList = [];     //观看任务列表，需要多次折返
+            var validTaskNames = [];
+            var totalTasks = packageName(common.taolivePackageName).text("得步数").find();
+            var validTasks = packageName(common.taolivePackageName).text("得步数").visibleToUser(true).find();
 
-        for (var i = 0; i < validTasks.length; i++) {
-            var taskItem = validTasks[i].parent();
-            var btn = taskItem.child(taskItem.childCount() - 2);
-            if (btn.bounds().height() > 50) {
-                validTaskNames.push(taskItem.child(0).text());
-            }
-        }
-        toastLog("任务数: " + totalTasks.length + ", 可见: " + validTaskNames.length + ", " + validTaskNames);
-
-        if (totalTasks.length == 0) {
-            captureScreen("/sdcard/Download/" + (new Date().Format("yyyy-MM-dd HH:mm:ss")) + ".png");
-            break;
-        }
-
-        var canWatch = common.canWatch();
-        log("canWatch: " + canWatch);
-        totalTasks.forEach(function(tv) {
-            var taskItem = tv.parent();
-            var title = taskItem.child(0).text();
-            var btn = taskItem.child(taskItem.childCount() - 2);
-            if (btn != null) {
-                if (/去完成|去浏览/.test(btn.text()) && title.indexOf("邀请") == -1 && title.indexOf("支付宝") == -1) {
-                    var obj = {};
-                    obj.Title = title;
-                    obj.BtnName = btn.text();
-                    obj.Button = btn;
-                    if (obj.Title.indexOf("浏览") != -1) {
-                        browseTaskList.push(obj);
-                    } else if (obj.Title.indexOf("搜索") != -1) {
-                        searchTaskList.push(obj);
-                    } else if ((obj.Title.indexOf("直播") != -1 || obj.Title.indexOf("视频") != -1 || obj.Title.indexOf("分钟") != -1) && canWatch) {
-                        watchTaskList.push(obj);
-                    } else {
-                        shortBrowseTaskList.push(obj);
-                    }
-                    log("未完成任务" + (shortBrowseTaskList.length + browseTaskList.length + searchTaskList.length + watchTaskList.length) + ": " + obj.Title + ", " + obj.BtnName + ", (" + obj.Button.bounds().centerX() + ", " + obj.Button.bounds().centerY() + "), " + obj.Button.bounds().height());
-                } else {
-                    log("跳过任务: " + title + ", " + btn.text() + ", (" + btn.bounds().centerX() + ", " + btn.bounds().centerY() + "), " + btn.bounds().height());
+            for (var i = 0; i < validTasks.length; i++) {
+                var taskItem = validTasks[i].parent();
+                var btn = taskItem.child(taskItem.childCount() - 2);
+                if (btn.bounds().height() > 50) {
+                    validTaskNames.push(taskItem.child(0).text());
                 }
             }
-        });
+            toastLog("任务数: " + totalTasks.length + ", 可见: " + validTaskNames.length + ", " + validTaskNames);
 
-        var uncompleteTaskNum = shortBrowseTaskList.length + browseTaskList.length + searchTaskList.length + watchTaskList.length;
-        log("未完成任务数: " + uncompleteTaskNum);
-        if (uncompleteTaskNum == 0) {
-            break;
-        }
+            if (totalTasks.length == 0) {
+                captureScreen("/sdcard/Download/" + (new Date().Format("yyyy-MM-dd HH:mm:ss")) + ".png");
+                commonAction.backTaoliveMainPage();
+                return;
+            }
 
-        shortBrowseTaskList = common.filterTaskList(shortBrowseTaskList, validTaskNames)
-        if (commonAction.doShortBrowseTasks(shortBrowseTaskList)) {
-            walkBtn = common.waitForText("text", "出发", true, 10);
-            if (walkBtn == null) {
+            var canWatch = common.canWatch();
+            log("canWatch: " + canWatch);
+            totalTasks.forEach(function(tv) {
+                var taskItem = tv.parent();
+                var title = taskItem.child(0).text();
+                var btn = taskItem.child(taskItem.childCount() - 2);
+                if (btn != null) {
+                    if (/去完成|去浏览/.test(btn.text()) && title.indexOf("邀请") == -1 && title.indexOf("支付宝") == -1) {
+                        var obj = {};
+                        obj.Title = title;
+                        obj.BtnName = btn.text();
+                        obj.Button = btn;
+                        if (obj.Title.indexOf("浏览") != -1) {
+                            browseTaskList.push(obj);
+                        } else if (obj.Title.indexOf("搜索") != -1) {
+                            searchTaskList.push(obj);
+                        } else if ((obj.Title.indexOf("直播") != -1 || obj.Title.indexOf("视频") != -1 || obj.Title.indexOf("分钟") != -1) && canWatch) {
+                            watchTaskList.push(obj);
+                        } else {
+                            shortBrowseTaskList.push(obj);
+                        }
+                        log("未完成任务" + (shortBrowseTaskList.length + browseTaskList.length + searchTaskList.length + watchTaskList.length) + ": " + obj.Title + ", " + obj.BtnName + ", (" + obj.Button.bounds().centerX() + ", " + obj.Button.bounds().centerY() + "), " + obj.Button.bounds().height());
+                    } else {
+                        log("跳过任务: " + title + ", " + btn.text() + ", (" + btn.bounds().centerX() + ", " + btn.bounds().centerY() + "), " + btn.bounds().height());
+                    }
+                }
+            });
+
+            var uncompleteTaskNum = shortBrowseTaskList.length + browseTaskList.length + searchTaskList.length + watchTaskList.length;
+            log("未完成任务数: " + uncompleteTaskNum);
+            if (uncompleteTaskNum == 0) {
+                commonAction.backTaoliveMainPage();
+                return;
+            }
+
+            shortBrowseTaskList = common.filterTaskList(shortBrowseTaskList, validTaskNames)
+            if (commonAction.doShortBrowseTasks(shortBrowseTaskList)) {
+                walkBtn = common.waitForText("text", "出发", true, 10);
+                if (walkBtn == null) {
+                    commonAction.backTaoliveMainPage();
+                    return;
+                }
+                //等待成功提示消失
+                sleep(3000);
+                collectSteps();
                 break;
             }
-            //等待成功提示消失
-            sleep(3000);
-            collectSteps();
-            continue;
-        }
 
-        browseTaskList = common.filterTaskList(browseTaskList, validTaskNames)
-        if (commonAction.doBrowseTasks(browseTaskList)) {
-            walkBtn = common.waitForText("text", "出发", true, 10);
-            if (walkBtn == null) {
+            browseTaskList = common.filterTaskList(browseTaskList, validTaskNames)
+            if (commonAction.doBrowseTasks(browseTaskList)) {
+                walkBtn = common.waitForText("text", "出发", true, 10);
+                if (walkBtn == null) {
+                    commonAction.backTaoliveMainPage();
+                    return;
+                }
+                //等待成功提示消失
+                sleep(3000);
+                collectSteps();
                 break;
             }
-            //等待成功提示消失
-            sleep(3000);
-            collectSteps();
-            continue;
-        }
 
-        searchTaskList = common.filterTaskList(searchTaskList, validTaskNames)
-        if (commonAction.doSearchTasks(searchTaskList)) {
-            walkBtn = common.waitForText("text", "出发", true, 10);
-            if (walkBtn == null) {
+            searchTaskList = common.filterTaskList(searchTaskList, validTaskNames)
+            if (commonAction.doSearchTasks(searchTaskList)) {
+                walkBtn = common.waitForText("text", "出发", true, 10);
+                if (walkBtn == null) {
+                    commonAction.backTaoliveMainPage();
+                    return;
+                }
+                //等待成功提示消失
+                sleep(3000);
+                collectSteps();
                 break;
             }
-            //等待成功提示消失
-            sleep(3000);
-            collectSteps();
-            continue;
-        }
 
-        watchTaskList = common.filterTaskList(watchTaskList, validTaskNames)
-        if (commonAction.doWatchTasks(watchTaskList)) {
-            walkBtn = common.waitForText("text", "出发", true, 10);
-            if (walkBtn == null) {
+            watchTaskList = common.filterTaskList(watchTaskList, validTaskNames)
+            if (commonAction.doWatchTasks(watchTaskList)) {
+                walkBtn = common.waitForText("text", "出发", true, 10);
+                if (walkBtn == null) {
+                    commonAction.backTaoliveMainPage();
+                    return;
+                }
+                //等待成功提示消失
+                sleep(3000);
+                collectSteps();
                 break;
             }
-            //等待成功提示消失
-            sleep(3000);
-            collectSteps();
-            continue;
-        }
 
-        log("上划任务列表: " + swipe(device.width / 5, device.height * 13 / 16, device.width / 5, device.height * 11 / 16, 200));
+            log("上划任务列表: " + swipe(device.width / 5, device.height * 13 / 16, device.width / 5, device.height * 11 / 16, 200));
+        }
     }
-
-    commonAction.backTaoliveMainPage();
 }
 
 module.exports = walkToEarn;

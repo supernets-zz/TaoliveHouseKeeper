@@ -207,6 +207,7 @@ commonAction.doBrowseTasks = function (tasklist) {
         // 等待离开任务列表页面
         if (common.waitForText("textContains", "浏览", true, 10)) {
             log("等待 " + tasklist[i].Title + " 浏览完成，60s超时");
+            sleep(5000);
             var browseRet = commonAction.scrollThrough("浏览", 60);
             //回到任务列表
             back();
@@ -263,7 +264,7 @@ commonAction.doWatchTasks = function (tasklist) {
         toastLog("点击 " + tasklist[i].Title + " " + tasklist[i].BtnName + ": " + click(tasklist[i].Button.bounds().centerX(), tasklist[i].Button.bounds().centerY()));
         // 等待离开任务列表页面
         var countdown = common.waitForText("text", "后完成", true, 10)
-        if (countdown) {
+        if (countdown != null) {
             var lastLeftTime = parseInt(countdown.parent().child(1).text().match(/\d+/));
             var interval = 3000;    //interval加上红包雨弹窗提示检测2秒正好5秒一个周期
             var startTime = parseInt(new Date().getTime() / 1000);

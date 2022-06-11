@@ -149,10 +149,10 @@ threads.start(function(){
                 "下周期检查时间戳: " + common.timestampToTime(nextPeriodCheckTS));
 
             var finalNextCheckTS = nextPeriodCheckTS;
-            if (!isNaN(nextWalkCheckTS)) {
+            if (!isNaN(nextWalkCheckTS) && now < nextWalkCheckTS) {
                 finalNextCheckTS = Math.min(finalNextCheckTS, nextWalkCheckTS);
             }
-            if (!isNaN(nextWorkCheckTS)) {
+            if (!isNaN(nextWorkCheckTS) && now < nextWorkCheckTS) {
                 finalNextCheckTS = Math.min(finalNextCheckTS, nextWorkCheckTS);
             }
 
@@ -205,7 +205,9 @@ function mainWorker() {
             signInEarn.doSignIn();
             signInEarn.doGetSignInBonus();
 
-            // 我的-> 元宝中心-> 去睡觉 主页
+            // 我的-> 元宝中心-> 去睡觉
+            sleepToEarn.doSleep();
+            // 我的-> 元宝中心-> 去睡觉
             sleepToEarn.doWakeup();
             // 我的-> 元宝中心-> 去睡觉 主页，时有时无
             sleepToEarn.doSleepMainBrowse();

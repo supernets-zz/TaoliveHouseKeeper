@@ -91,84 +91,86 @@ shakeToEarn.doShakeRoutineTasks = function () {
             return;
         }
 
-        var browseTaskList = [];    //浏览任务列表，滑动浏览完成后返回
-        var searchTaskList = [];    //搜索任务列表，搜索后返回
-        var watchTaskList = [];     //观看任务列表，需要多次折返
-        var validTaskNames = [];
-        var totalTasks = packageName(common.taolivePackageName).text("得次数").find();
-        var validTasks = packageName(common.taolivePackageName).text("得次数").visibleToUser(true).find();
+        for (;;) {
+            var browseTaskList = [];    //浏览任务列表，滑动浏览完成后返回
+            var searchTaskList = [];    //搜索任务列表，搜索后返回
+            var watchTaskList = [];     //观看任务列表，需要多次折返
+            var validTaskNames = [];
+            var totalTasks = packageName(common.taolivePackageName).text("得次数").find();
+            var validTasks = packageName(common.taolivePackageName).text("得次数").visibleToUser(true).find();
 
-        validTasks.forEach(function (tv) {
-            var taskItem = tv.parent();
-            var title = taskItem.child(0).text();   //任务名称在第一个
-            var btn = taskItem.child(taskItem.childCount() - 2);    //按钮在倒数第二个
-            if (btn.bounds().height() > 50) {   //有的系统visibleToUser(true)有没有返回的个数都一样，用高度隐藏了
-                validTaskNames.push(title);
-            }
-        });
-        toastLog("任务数: " + totalTasks.length + ", 可见: " + validTaskNames.length + ", " + validTaskNames);
-
-        if (totalTasks.length == 0) {
-            captureScreen("/sdcard/Download/" + (new Date().Format("yyyy-MM-dd HH:mm:ss")) + ".png");
-            break;
-        }
-
-        var canWatch = common.canWatch();
-        log("canWatch: " + canWatch);
-        totalTasks.forEach(function(tv) {
-            var taskItem = tv.parent();
-            var title = taskItem.child(0).text();   //任务名称在第一个
-            var btn = taskItem.child(taskItem.childCount() - 2);    //按钮在倒数第二个
-            if (/去完成|去浏览|去观看/.test(btn.text()) && 
-                title.indexOf("邀请") == -1 && 
-                title.indexOf("领红包") == -1 && 
-                title.indexOf("领水果") == -1) {
-                var obj = {};
-                obj.Title = title;
-                obj.BtnName = btn.text();
-                obj.Button = btn;
-                if (obj.Title.indexOf("浏览") != -1) {
-                    browseTaskList.push(obj);
-                } else if (obj.Title.indexOf("搜索") != -1) {
-                    searchTaskList.push(obj);
-                } else if ((obj.Title.indexOf("直播") != -1 || obj.Title.indexOf("视频") != -1 || obj.Title.indexOf("分钟") != -1) && canWatch) {
-                    watchTaskList.push(obj);
+            validTasks.forEach(function (tv) {
+                var taskItem = tv.parent();
+                var title = taskItem.child(0).text();   //任务名称在第一个
+                var btn = taskItem.child(taskItem.childCount() - 2);    //按钮在倒数第二个
+                if (btn.bounds().height() > 50) {   //有的系统visibleToUser(true)有没有返回的个数都一样，用高度隐藏了
+                    validTaskNames.push(title);
                 }
-                log("未完成任务" + (browseTaskList.length + searchTaskList.length + watchTaskList.length) + ": " + obj.Title + ", " + obj.BtnName + ", (" + obj.Button.bounds().centerX() + ", " + obj.Button.bounds().centerY() + "), " + obj.Button.bounds().height());
-            } else {
-                log("跳过任务: " + title + ", " + btn.text() + ", (" + btn.bounds().centerX() + ", " + btn.bounds().centerY() + "), " + btn.bounds().height());
+            });
+            toastLog("任务数: " + totalTasks.length + ", 可见: " + validTaskNames.length + ", " + validTaskNames);
+
+            if (totalTasks.length == 0) {
+                captureScreen("/sdcard/Download/" + (new Date().Format("yyyy-MM-dd HH:mm:ss")) + ".png");
+                commonAction.backTaoliveMainPage();
+                return;
             }
-        });
 
-        var uncompleteTaskNum = browseTaskList.length + searchTaskList.length + watchTaskList.length;
-        log("未完成任务数: " + uncompleteTaskNum);
-        if (uncompleteTaskNum == 0) {
-            break;
-        }
+            var canWatch = common.canWatch();
+            log("canWatch: " + canWatch);
+            totalTasks.forEach(function(tv) {
+                var taskItem = tv.parent();
+                var title = taskItem.child(0).text();   //任务名称在第一个
+                var btn = taskItem.child(taskItem.childCount() - 2);    //按钮在倒数第二个
+                if (/去完成|去浏览|去观看/.test(btn.text()) && 
+                    title.indexOf("邀请") == -1 && 
+                    title.indexOf("领红包") == -1 && 
+                    title.indexOf("领水果") == -1) {
+                    var obj = {};
+                    obj.Title = title;
+                    obj.BtnName = btn.text();
+                    obj.Button = btn;
+                    if (obj.Title.indexOf("浏览") != -1) {
+                        browseTaskList.push(obj);
+                    } else if (obj.Title.indexOf("搜索") != -1) {
+                        searchTaskList.push(obj);
+                    } else if ((obj.Title.indexOf("直播") != -1 || obj.Title.indexOf("视频") != -1 || obj.Title.indexOf("分钟") != -1) && canWatch) {
+                        watchTaskList.push(obj);
+                    }
+                    log("未完成任务" + (browseTaskList.length + searchTaskList.length + watchTaskList.length) + ": " + obj.Title + ", " + obj.BtnName + ", (" + obj.Button.bounds().centerX() + ", " + obj.Button.bounds().centerY() + "), " + obj.Button.bounds().height());
+                } else {
+                    log("跳过任务: " + title + ", " + btn.text() + ", (" + btn.bounds().centerX() + ", " + btn.bounds().centerY() + "), " + btn.bounds().height());
+                }
+            });
 
-        browseTaskList = common.filterTaskList(browseTaskList, validTaskNames)
-        if (commonAction.doBrowseTasks(browseTaskList)) {
-            //等待成功提示消失
-            sleep(3000);
-            continue;
-        }
+            var uncompleteTaskNum = browseTaskList.length + searchTaskList.length + watchTaskList.length;
+            log("未完成任务数: " + uncompleteTaskNum);
+            if (uncompleteTaskNum == 0) {
+                commonAction.backTaoliveMainPage();
+                return;
+            }
 
-        searchTaskList = common.filterTaskList(searchTaskList, validTaskNames)
-        if (commonAction.doSearchTasks(searchTaskList)) {
-            //等待成功提示消失
-            sleep(3000);
-            continue;
-        }
+            browseTaskList = common.filterTaskList(browseTaskList, validTaskNames)
+            if (commonAction.doBrowseTasks(browseTaskList)) {
+                //等待成功提示消失
+                sleep(3000);
+                break;
+            }
 
-        watchTaskList = common.filterTaskList(watchTaskList, validTaskNames)
-        if (commonAction.doWatchTasks(watchTaskList)) {
-            //等待成功提示消失
-            sleep(3000);
-            continue;
+            searchTaskList = common.filterTaskList(searchTaskList, validTaskNames)
+            if (commonAction.doSearchTasks(searchTaskList)) {
+                //等待成功提示消失
+                sleep(3000);
+                break;
+            }
+
+            watchTaskList = common.filterTaskList(watchTaskList, validTaskNames)
+            if (commonAction.doWatchTasks(watchTaskList)) {
+                //等待成功提示消失
+                sleep(3000);
+                break;
+            }
         }
     }
-
-    commonAction.backTaoliveMainPage();
 }
 
 module.exports = shakeToEarn;

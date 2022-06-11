@@ -60,10 +60,10 @@ signInEarn.doSignIn = function () {
     var now = new Date().getTime();
     var curDate = new Date().Format("yyyy/MM/dd");
     var signInBeginTime = new Date(curDate + " 00:00:00").getTime();
-    var signInEndTime = new Date(curDate + " 19:59:59").getTime();
+    var signInEndTime = new Date(curDate + " 20:00:00").getTime();
     log("签到有效时间段: [" + common.timestampToTime(signInBeginTime) + ", " + common.timestampToTime(signInEndTime) + "]");
     //不在时间范围内，签到任务又没做，当日就断签了
-    if (now < signInBeginTime || now >= signInEndTime) {
+    if (now < signInBeginTime || now > signInEndTime) {
         common.safeSet(nowDate + ":" + signInTag, "out of time");
         toastLog("过期 " + signInTag);
         commonAction.backTaoliveMainPage();
@@ -131,9 +131,9 @@ signInEarn.doGetSignInBonus = function () {
     var now = new Date().getTime();
     var curDate = new Date().Format("yyyy/MM/dd");
     var getBonusBeginTime = new Date(curDate + " 20:00:00").getTime();
-    var getBonusEndTime = new Date(curDate + " 23:59:59").getTime();
+    var getBonusEndTime = new Date(curDate + " 24:00:00").getTime();
     log("签到开奖有效时间段: [" + common.timestampToTime(getBonusBeginTime) + ", " + common.timestampToTime(getBonusEndTime) + "]");
-    if (now < getBonusBeginTime || now >= getBonusEndTime) {
+    if (now < getBonusBeginTime || now > getBonusEndTime) {
         log("未到开奖时间");
         return;
     }

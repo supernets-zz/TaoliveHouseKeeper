@@ -15,6 +15,23 @@ common.nextWorkCheckTimestampTag = "下一次体力领取检查时间戳";  //�
 var storagelock = threads.lock();
 var localStorages = storages.create(common.appName+":global");
 
+common.checkAuditTime = function (beginTime, endTime) {
+    var nowDate = new Date();
+    var beginDate = new Date(nowDate);
+    var endDate = new Date(nowDate);
+
+    var beginIndex = beginTime.lastIndexOf("\:");
+    var beginHour = beginTime.substring(0, beginIndex);
+    var beginMinue = beginTime.substring(beginIndex + 1, beginTime.length);
+    beginDate.setHours(beginHour, beginMinue, 0, 0);
+
+    var endIndex = endTime.lastIndexOf("\:");
+    var endHour = endTime.substring(0, endIndex);
+    var endMinue = endTime.substring(endIndex + 1, endTime.length);
+    endDate.setHours(endHour, endMinue, 0, 0);
+    return nowDate.getTime() - beginDate.getTime() >= 0 && nowDate.getTime() <= endDate.getTime();
+}
+
 common.timestampToTime = function (timestamp) {
     var date = new Date(timestamp);//时间戳为10位需*1000，时间戳为13位的话不需乘1000
     var Y = date.getFullYear() + '-';
@@ -67,7 +84,7 @@ common.queryList = function (json, depth, arr) {
             arr.push(json.child(i));
         } else {
             if (depth > 0) {
-                queryList(sonList, depth - 1, arr);
+                this.queryList(sonList, depth - 1, arr);
             } else {
                 arr.push(json.child(i));
             }
@@ -106,6 +123,7 @@ common.waitForText = function (method, txt, visible, sec) {
             }
         }
     }
+    //log(txt + " 出现" + obj);
     return obj;
 }
 
@@ -128,6 +146,7 @@ common.waitForTextMatches = function (regex, visible, sec) {
             }
         }
     }
+    //log(regex + " 出现" + obj);
     return obj;
 }
 
@@ -185,7 +204,12 @@ common.canWatch = function () {
         workTS = tmp;
     }
 
-    log("walkTS: " + this.timestampToTime(walkTS) + ", workTS: " + this.timestampToTime(workTS));
+    var midnight = common.checkAuditTime("00:00", "08:00");
+    log("permitted: " + permitted + ", [00:00~08:00]: " + midnight + ", walkTS: " + this.timestampToTime(walkTS) + ", workTS: " + this.timestampToTime(workTS));
+
+    if (midnight && permitted == null) {
+        return false;
+    }
     //当前时间小于Min(领取能量饮料, 领取体力)的时间才允许做视频任务
     if (walkTS == null && workTS == null) {
         return false;
