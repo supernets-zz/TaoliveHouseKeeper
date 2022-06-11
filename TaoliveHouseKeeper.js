@@ -7,6 +7,8 @@ var commonAction = require("./commonAction.js");
 var walkToEarn = require("./walkToEarn.js");
 var workToEarn = require("./workToEarn.js");
 var shakeToEarn = require("./shakeToEarn.js");
+var sleepToEarn = require("./sleepToEarn.js");
+var signInEarn = require("./signInEarn.js");
 
 var shutdownFlag = threads.atomic();
 var background = threads.disposable();
@@ -113,10 +115,6 @@ threads.start(function(){
     var flag = background.blockedGet();
 	log("启动点淘管家主线程:");
     requestScreenCapture();
-    // 记录上次走路赚元宝、打工赚元宝除观看视频外的任务（主要是收集步数和体力）的时间戳，视频任务执行起来会耽搁采集的时间，故超过10分钟就先不做视频任务，先去隔壁采集
-    // 先减去lastCollectTimeout为了一开始先不做视频任务
-    common.safeSet(common.lastWalkToEarnCollectTag, Math.floor(new Date().getTime() / 1000) - common.lastCollectTimeout);
-    common.safeSet(common.lastWorkToEarnCollectTag, Math.floor(new Date().getTime() / 1000) - common.lastCollectTimeout);
     while (flag > 0) {
         var ret = false;
         try {
@@ -143,9 +141,32 @@ threads.start(function(){
         log("isAllDailyTaskComplete: " + allComplete + ", mainWorker return: " + ret);
         if (allComplete && ret) {
             var now = new Date().getTime();
-            var nextCheckTime = parseInt((now + execInterval * 1000) / (execInterval * 1000)) * (execInterval * 1000);
-            log(Math.floor(nextCheckTime - now) / 1000 + "s 后的 " + common.timestampToTime(nextCheckTime) + " 进行下一次检查");
-            sleep(nextCheckTime - now);
+            var orgNextCheckTimestamp = parseInt(common.safeGet(common.nextCheckTimestampTag));
+            log("原 " + common.nextCheckTimestampTag + ": " + common.timestampToTime(orgNextCheckTimestamp));
+            //检查时间过期了置为null
+            if (!isNaN(orgNextCheckTimestamp) && now > orgNextCheckTimestamp) {
+                common.safeSet(common.nextCheckTimestampTag, null);
+                log(common.nextCheckTimestampTag + " 过期: " + common.timestampToTime(orgNextCheckTimestamp));
+            }
+
+            var newNextCheckTimestamp = parseInt((now + execInterval * 1000) / (execInterval * 1000)) * (execInterval * 1000);
+            orgNextCheckTimestamp = parseInt(common.safeGet(common.nextCheckTimestampTag));
+            if (!isNaN(orgNextCheckTimestamp)) {
+                //检查时间没过期，看是否比原来的近，近就更新
+                if (newNextCheckTimestamp < orgNextCheckTimestamp) {
+                    common.safeSet(common.nextCheckTimestampTag, newNextCheckTimestamp);
+                    log(common.nextCheckTimestampTag + " 从 " + common.timestampToTime(orgNextCheckTimestamp) + " 更新为: " + common.timestampToTime(newNextCheckTimestamp));
+                } else {
+                    log(common.nextCheckTimestampTag + "不变: " + common.timestampToTime(orgNextCheckTimestamp));
+                }
+            } else {
+                common.safeSet(common.nextCheckTimestampTag, newNextCheckTimestamp);
+                log(common.nextCheckTimestampTag + " 设置为: " + common.timestampToTime(newNextCheckTimestamp));
+            }
+
+            var finalNextCheckTimestamp = common.safeGet(common.nextCheckTimestampTag);
+            log(Math.floor((finalNextCheckTimestamp - now) / 1000) + "s 后的 " + common.timestampToTime(finalNextCheckTimestamp) + " 进行下一次检查");
+            sleep(finalNextCheckTimestamp - now);
         }
     }
 });
@@ -156,6 +177,7 @@ function isAllDailyTaskComplete() {
     taskList.push.apply(taskList, shakeToEarn.dailyJobs);
     taskList.push.apply(taskList, walkToEarn.dailyJobs);
     taskList.push.apply(taskList, workToEarn.dailyJobs);
+    taskList.push.apply(taskList, sleepToEarn.dailyJobs);
     for (var i = 0; i < taskList.length; i++) {
         var done = common.safeGet(nowDate + ":" + taskList[i]);
         if (done == null) {
@@ -184,19 +206,29 @@ function mainWorker() {
             toastLog("Taolive is unknown status");
             captureScreen("/sdcard/Download/" + (new Date().Format("yyyy-MM-dd HH:mm:ss")) + ".png");
         } else {
-            // 浏览我的-> 元宝中心-> 摇一摇赚元宝 主页，时有时无
+            // 我的-> 元宝中心-> 去签到 主页
+            // 因为签到只有在收益正常的时候才能成功，故作为走路赚元宝准人判断的依据
+            signInEarn.doSignIn();
+            signInEarn.doGetSignInBonus();
+
+            // 我的-> 元宝中心-> 去睡觉 主页
+            sleepToEarn.doWakeup();
+            // 我的-> 元宝中心-> 去睡觉 主页，时有时无
+            sleepToEarn.doSleepMainBrowse();
+
+            // 我的-> 元宝中心-> 摇一摇赚元宝 主页，时有时无
             shakeToEarn.doShakeMainBrowse();
 
-            // 浏览我的-> 元宝中心-> 走路赚元宝 主页，每日一次
+            // 我的-> 元宝中心-> 走路赚元宝 主页，每日一次
             walkToEarn.doWalkMainBrowse();
-            // 浏览我的-> 元宝中心-> 走路赚元宝 街区提示，每日一次
+            // 我的-> 元宝中心-> 走路赚元宝 街区提示，每日一次
             walkToEarn.doWalkStreetBrowse();
 
-            // 浏览我的-> 元宝中心-> 打工赚元宝 首页签到，每日一次，第7天不签
+            // 我的-> 元宝中心-> 打工赚元宝 首页签到，每日一次，第7天不签
             workToEarn.doWorkDailySign();
-            // 浏览我的-> 元宝中心-> 打工赚元宝 主页，每日一次
+            // 我的-> 元宝中心-> 打工赚元宝 主页，每日一次
             workToEarn.doWorkMainBrowse();
-            // 浏览我的-> 元宝中心-> 打工赚元宝 旺市，每日一次
+            // 我的-> 元宝中心-> 打工赚元宝 旺市，每日一次
             workToEarn.doWorkMarketBrowse();
 
             // 我的-> 元宝中心-> 摇一摇赚元宝，浏览xx、看视频、看直播
@@ -205,6 +237,7 @@ function mainWorker() {
             walkToEarn.doWalkRoutineTasks();
             // 我的-> 元宝中心-> 打工赚元宝，浏览xx、看视频、看直播
             workToEarn.doWorkRoutineTasks();
+
             ret = true;
         }
 	} catch(e) {

@@ -4,9 +4,12 @@ common.appName = "TaoliveHouseKeeper";
 common.destAppName = "点淘";
 common.taolivePackageName = "com.taobao.live";
 
-common.lastWalkToEarnCollectTag = "走路赚元宝采集时间戳";
-common.lastWorkToEarnCollectTag = "打工赚元宝采集时间戳";
-common.lastCollectTimeout = 10 * 60;    //采集超时时间
+//收益正常才允许每日首次进入，否则元宝只有1/10，首次进入后后面随意进出
+common.walkToEarnPermissionTag = "走路赚元宝准入";
+
+//走路与打工的视频直播观看任务需要在签到、睡觉、成功打工、摇一摇视频直播任务之后才能执行
+//Min(下一次走路赚元宝领能量饮料, 下一次打工赚元宝领体力, 下一次走路赚元宝准入检查时间戳, 下一个整点检查时间戳)
+common.nextCheckTimestampTag = "下一次检查时间戳";  //带毫秒
 
 var storagelock = threads.lock();
 var localStorages = storages.create(common.appName+":global");
@@ -83,7 +86,6 @@ common.listAll = function () {
     }
 }
 
-
 common.waitForText = function (method, txt, visible, sec) {
     var obj = null;
     for (var i = 0; i < sec && obj == null; i++) {
@@ -94,6 +96,13 @@ common.waitForText = function (method, txt, visible, sec) {
         }
         if (obj == null) {
             log("等待 " + txt + " 出现");
+        } else {
+            if (visible) {
+                if (obj.bounds().height() < 10) {
+                    log("等待 " + txt + " 出现, height: " + obj.bounds().height());
+                    obj = null;
+                }
+            }
         }
     }
     return obj;
@@ -105,10 +114,17 @@ common.waitForTextMatches = function (regex, visible, sec) {
         if (visible) {
             obj = eval("textMatches(" + regex + ").visibleToUser(true).findOne(1000)");
         } else {
-            obj = eval("textMatches(" + regex + ").visibleToUser(true).findOne(1000)");
+            obj = eval("textMatches(" + regex + ").findOne(1000)");
         }
         if (obj == null) {
             log("等待 " + regex + " 出现");
+        } else {
+            if (visible) {
+                if (obj.bounds().height() < 10) {
+                    log("等待 " + regex + " 出现, height: " + obj.bounds().height());
+                    obj = null;
+                }
+            }
         }
     }
     return obj;
@@ -136,6 +152,18 @@ common.filterTaskList = function (todoTasks, validTaskNames) {
         }
     }
     return ret;
+}
+
+common.grantWalkToEarnPermission = function () {
+    var nowDate = new Date().Format("yyyy-MM-dd");
+    var permitted = common.safeGet(nowDate + ":" + this.walkToEarnPermissionTag);
+    if (permitted != null) {
+        log(this.walkToEarnPermissionTag + " : " + permitted);
+        return;
+    }
+
+    common.safeSet(nowDate + ":" + this.walkToEarnPermissionTag, true);
+    log(this.walkToEarnPermissionTag + " : 允许进入");
 }
 
 module.exports = common;

@@ -133,7 +133,7 @@ commonAction.gotoCoinCenter = function () {
     var getBtn = textMatches(/去领步数/).findOne(1000);
     if (getBtn != null) {
         var dlgCloseBtn = getBtn.parent().parent().child(1);
-        log(getBtn.text() + " 关闭: " + dlgCloseBtn.click());
+        log(getBtn.text() + " 关闭: " + click(dlgCloseBtn.bounds().centerX(), dlgCloseBtn.bounds().centerY()));
     }
 
     // 元宝中心右上角金蛋
@@ -183,6 +183,20 @@ commonAction.scrollThrough = function (txt, timeout) {
     }
 
     return true;
+}
+
+//成功返回true，超时或异常返回false，最后会返回上一个页面
+commonAction.doShortBrowseTasks = function (tasklist) {
+    var ret = false;
+    for (var i = 0; i < tasklist.length; i++) {
+        toastLog("点击 " + tasklist[i].Title + " " + tasklist[i].BtnName + ": " + click(tasklist[i].Button.bounds().centerX(), tasklist[i].Button.bounds().centerY()));
+        sleep(10000);
+        //回到任务列表
+        back();
+        ret = true;
+        break;
+    }
+    return ret;
 }
 
 //成功返回true，超时或异常返回false，最后会返回上一个页面
@@ -253,12 +267,16 @@ commonAction.doWatchTasks = function (tasklist) {
             var startTime = parseInt(new Date().getTime() / 1000);
             var nowTime = parseInt(new Date().getTime() / 1000);
             var closeBtn = id("taolive_close_btn").findOne(1000);
+            var startTick = new Date().getTime();
             for (;;) {
                 var countdown = text("后完成").findOne(1000);
                 var prog = text("6/6").findOne(1000);
                 log("pass" + (nowTime - startTime) + "s, countdown: " + (countdown != null) + ", 6/6 exists: " + (prog != null) + ", live: " + (closeBtn != null));
                 if (countdown == null) {
-                    break;
+                    if (new Date().getTime() - startTick > 10 * 1000) {
+                        break;
+                    }
+                    captureScreen("/sdcard/Download/watch" + (new Date().Format("yyyy-MM-dd_HH:mm:ss")) + ".png");
                 }
 
                 //红包雨弹窗提示
@@ -271,7 +289,7 @@ commonAction.doWatchTasks = function (tasklist) {
                 var tryAgainBtn = text("再来一次").findOne(1000);
                 if (tryAgainBtn != null) {
                     var dlgCloseBtn = tryAgainBtn.parent().parent().parent().child(1);
-                    log("啊哦，这次没抢到红包 关闭: " + dlgCloseBtn.click());
+                    log("啊哦，这次没抢到红包 关闭: " + click(dlgCloseBtn.bounds().centerX(), dlgCloseBtn.bounds().centerY()));
                 }
                 nowTime = parseInt(new Date().getTime() / 1000);
                 //十五分钟超时，最长的任务是8分钟

@@ -31,9 +31,9 @@ signInEarn.doSignIn = function () {
 
     var btnSignIn = null;
     for (var i = 0; i < 10; i++) {
-        btnSignIn = textMatches(/去签到|待开奖/).visibleToUser(true).findOne(1000);
+        btnSignIn = textMatches(/去签到|待开奖|去开奖/).visibleToUser(true).findOne(1000);
         if (btnSignIn == null || btnSignIn != null && btnSignIn.bounds().height() < 42) {
-            log("上划屏幕找 去签到|待开奖: " + swipe(device.width / 2, device.height * 7 / 8, device.width / 2, device.height / 8, 1000));
+            log("上划屏幕找 去签到|待开奖|去开奖: " + swipe(device.width / 2, device.height * 7 / 8, device.width / 2, device.height / 8, 1000));
             sleep(1000);
             continue;
         }
@@ -41,13 +41,14 @@ signInEarn.doSignIn = function () {
     }
 
     if (btnSignIn == null) {
-        log("去签到|待开奖 not found")
+        log("去签到|待开奖|去开奖 not found")
         commonAction.backTaoliveMainPage();
         return;
     }
 
     //去签到按钮变为待开奖说明已经签过到了
     if (btnSignIn.text() == "待开奖") {
+        //点击立即签到有可能因非正常收益导致签到失败，故放在这判定签到是否成功
         common.safeSet(nowDate + ":" + signInTag, "done");
         toastLog("完成 " + signInTag);
         common.grantWalkToEarnPermission();
@@ -81,13 +82,10 @@ signInEarn.doSignIn = function () {
         //连续14天签到的前13天签到
         if (i != signInCalendar.childCount() - 1) {
             if (signInItem.child(signInItem.childCount() - 1).className() == "android.view.View") {
-                log(new Date().Format("MM.dd") + ", " + signInItem.child(signInItem.childCount() - 1).text());
-                if (new Date().Format("MM.dd") == signInItem.child(signInItem.childCount() - 1).text()) {
+                log(signInItem.child(signInItem.childCount() - 1).text());
+                if (signInItem.child(signInItem.childCount() - 1).text() == "立即签到") {
                     log(new Date().Format("MM.dd") + " 签到: " + signInItem.click());
                     sleep(1000);
-                    common.safeSet(nowDate + ":" + signInTag, "done");
-                    toastLog("完成 " + signInTag);
-                    common.grantWalkToEarnPermission();
                     break;
                 }
             } else {
@@ -96,13 +94,10 @@ signInEarn.doSignIn = function () {
         } else {    //连续14天签到的最后一天签到
             var lastSignInItem = signInItem.child(0);   //可点击
             if (lastSignInItem.child(lastSignInItem.childCount() - 1).className() == "android.view.View") {
-                log(new Date().Format("MM.dd") + ", " + lastSignInItem.child(lastSignInItem.childCount() - 1).text());
-                if (new Date().Format("MM.dd") == lastSignInItem.child(lastSignInItem.childCount() - 1).text()) {
+                log(lastSignInItem.child(lastSignInItem.childCount() - 1).text());
+                if (lastSignInItem.child(lastSignInItem.childCount() - 1).text() == "立即签到") {
                     log(new Date().Format("MM.dd") + " 签到: " + lastSignInItem.click());
                     sleep(1000);
-                    common.safeSet(nowDate + ":" + signInTag, "done");
-                    toastLog("完成 " + signInTag);
-                    common.grantWalkToEarnPermission();
                     break;
                 }
             } else {
@@ -151,9 +146,9 @@ signInEarn.doGetSignInBonus = function () {
 
     var btnSignIn = null;
     for (var i = 0; i < 10; i++) {
-        btnSignIn = textMatches(/去签到|待开奖/).visibleToUser(true).findOne(1000);
+        btnSignIn = textMatches(/去签到|待开奖|去开奖/).visibleToUser(true).findOne(1000);
         if (btnSignIn == null || btnSignIn != null && btnSignIn.bounds().height() < 42) {
-            log("上划屏幕找 去签到|待开奖: " + swipe(device.width / 2, device.height * 7 / 8, device.width / 2, device.height / 8, 1000));
+            log("上划屏幕找 去签到|待开奖|去开奖: " + swipe(device.width / 2, device.height * 7 / 8, device.width / 2, device.height / 8, 1000));
             sleep(1000);
             continue;
         }
@@ -161,12 +156,12 @@ signInEarn.doGetSignInBonus = function () {
     }
 
     if (btnSignIn == null) {
-        log("去签到|待开奖 not found")
+        log("去签到|待开奖|去开奖 not found")
         commonAction.backTaoliveMainPage();
         return;
     }
 
-    log("点击 待开奖: " + click(btnSignIn.bounds().centerX(), btnSignIn.bounds().centerY()));
+    log("点击 去开奖: " + click(btnSignIn.bounds().centerX(), btnSignIn.bounds().centerY()));
 
     //每日签到开奖
     var getBonusTips = common.waitForText("text", "最高可获得1000000元宝", true, 10);

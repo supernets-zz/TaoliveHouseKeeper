@@ -34,7 +34,7 @@ gotoSleepEarnCoins = function () {
 
     //提示语"Hi，欢迎来领元宝...|Hi，上午好"
     // var timeTips = common.waitForTextMatches(/现在是\d+月\d+日.*/, true, 10);
-    var welcomeTips = common.waitForTextMatches(/Hi，.*/, true, 10);
+    var welcomeTips = common.waitForText("text", "睡觉记录", true, 10);
     return welcomeTips;
 }
 
@@ -86,22 +86,22 @@ sleepToEarn.doSleep = function () {
     // 睡觉时间[21:00~03:00)
     var now = new Date().getTime();
     var curDate = new Date().Format("yyyy/MM/dd");
-    var sleepBeginTime = new Date(curDate + " 06:00:00").getTime();
-    var sleepEndTime = new Date(curDate + " 20:59:59").getTime();
+    var sleepBeginTime = new Date(curDate + " 21:00:00").getTime();
+    var sleepEndTime = new Date(curDate + " 02:59:59").getTime();
     log("唤醒有效时间段: [" + common.timestampToTime(sleepBeginTime) + ", " + common.timestampToTime(sleepEndTime) + "]");
     //不在时间范围内不判断唤醒任务做没做
     if (now < sleepBeginTime || now >= sleepEndTime) {
         return;
     }
 
-    toast("doWakeup");
-    var welcomeTips = gotoSleepEarnCoins();
-    if (welcomeTips == null) {
+    toast("doSleep");
+    var sleepRecord = gotoSleepEarnCoins();
+    if (sleepRecord == null) {
         commonAction.backTaoliveMainPage();
         return;
     }
 
-    var mainFrame = welcomeTips.parent().parent();
+    var mainFrame = sleepRecord.parent().parent();
     var wakeupBtn = mainFrame.child(1);
     var lucyPackageBtn = mainFrame.child(2).child(0);
     log("睡觉按钮: " + wakeupBtn.text())
@@ -162,14 +162,14 @@ sleepToEarn.doWakeup = function () {
     }
 
     toast("doWakeup");
-    var welcomeTips = gotoSleepEarnCoins();
-    if (welcomeTips == null) {
+    var sleepRecord = gotoSleepEarnCoins();
+    if (sleepRecord == null) {
         commonAction.backTaoliveMainPage();
         return;
     }
 
     sleep(1000);
-    var mainFrame = welcomeTips.parent().parent();
+    var mainFrame = sleepRecord.parent().parent();
     var wakeupBtn = mainFrame.child(1);
     var lucyPackageBtn = mainFrame.child(2).child(0);
     log("睡觉按钮: " + wakeupBtn.text())

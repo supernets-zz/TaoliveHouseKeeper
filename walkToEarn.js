@@ -6,9 +6,6 @@ var commonAction = require("./commonAction.js");
 const browseTag = "走路赚元宝浏览首页";
 const streetTag = "走路赚元宝浏览街区";
 
-//收益正常才允许每日首次进入，否则元宝只有1/10，首次进入后后面随意进出
-walkToEarn.permissionTag = "走路赚元宝准入";
-
 walkToEarn.dailyJobs = [];
 walkToEarn.dailyJobs.push(browseTag);
 walkToEarn.dailyJobs.push(streetTag);
@@ -17,9 +14,9 @@ gotoWalkEarnCoins = function () {
     var walkBtn = null;
 
     var nowDate = new Date().Format("yyyy-MM-dd");
-    var permission = common.safeGet(nowDate + ":" + walkToEarn.permissionTag);
+    var permission = common.safeGet(nowDate + ":" + common.walkToEarnPermissionTag);
     if (permission == null) {
-        log(walkToEarn.permissionTag + " : " + permission);
+        log(common.walkToEarnPermissionTag + " : " + permission);
         return walkBtn;
     }
 
@@ -91,7 +88,35 @@ collectSteps = function () {
         log("领取能量饮料后可用步数: " + walkBtn.parent().child(1).text());
     }
 
-    common.safeSet(common.lastWalkToEarnCollectTag, Math.floor(new Date().getTime() / 1000));
+    //根据能量饮料剩余时间计算临近的下次检查时间
+    energyLeftTime = energyBtn.child(1);
+    log("下次能量饮料剩余时间: " + energyLeftTime.text());
+    var now = new Date().getTime();
+    var orgNextCheckTimestamp = parseInt(common.safeGet(common.nextCheckTimestampTag));
+    //检查时间过期了置为null
+    if (!isNaN(orgNextCheckTimestamp) && now > orgNextCheckTimestamp) {
+        common.safeSet(common.nextCheckTimestampTag, null);
+        log(common.nextCheckTimestampTag + " 过期: " + common.timestampToTime(orgNextCheckTimestamp));
+    }
+
+    if (/\d+:\d+:\d+/.test(energyLeftTime.text())) {
+        var HHmmss = energyLeftTime.text().match(/\d+/g);
+        var newNextCheckTimestamp = now + (parseInt(HHmmss[0]) * 3600 + parseInt(HHmmss[1]) * 60 + parseInt(HHmmss[2])) * 1000;
+        log("下次领取饮料时间: " + common.timestampToTime(newNextCheckTimestamp));
+        var orgNextCheckTimestamp = parseInt(common.safeGet(common.nextCheckTimestampTag));
+        if (!isNaN(orgNextCheckTimestamp)) {
+            //检查时间没过期，看是否比原来的近，近就更新
+            if (newNextCheckTimestamp < orgNextCheckTimestamp) {
+                common.safeSet(common.nextCheckTimestampTag, newNextCheckTimestamp);
+                log(common.nextCheckTimestampTag + " 从 " + common.timestampToTime(orgNextCheckTimestamp) + " 更新为: " + common.timestampToTime(newNextCheckTimestamp));
+            } else {
+                log(common.nextCheckTimestampTag + "不变: " + common.timestampToTime(orgNextCheckTimestamp));
+            }
+        } else {
+            common.safeSet(common.nextCheckTimestampTag, newNextCheckTimestamp);
+            log(common.nextCheckTimestampTag + " 设置为: " + common.timestampToTime(newNextCheckTimestamp));
+        }
+    }
 
     //可用步数不为零才点出发
     if (stepsTips > 0) {
@@ -133,7 +158,7 @@ collectSteps = function () {
         var tips = textContains("成功领取元宝").findOne(5000);
         if (tips != null) {
             var dlgCloseBtn = tips.parent().parent().child(1);
-            log("遇 成功领取元宝 提示，点击 关闭: " + dlgCloseBtn.click());
+            log("遇 成功领取元宝 提示，点击 关闭: " + click(dlgCloseBtn.bounds().centerX(), dlgCloseBtn.bounds().centerY()));
             sleep(1000);
         }
     }
@@ -224,11 +249,11 @@ walkToEarn.doWalkRoutineTasks = function () {
     collectSteps();
 
     //赚步数按钮坐标
-    var earnStepsBtnX = walkBtn.bounds().centerX() + walkBtn.bounds().width() * 2;
-    var earnStepsBtnY = walkBtn.bounds().centerY();
+    var threeBtnsBar = walkBtn.parent().parent().parent();
+    var earnBtn = threeBtnsBar.child(2);
     for (;;) {
-        clickRet = click(earnStepsBtnX, earnStepsBtnY);
-        log("点击 赚步数(" + earnStepsBtnX + ", " + earnStepsBtnY + "): " + clickRet);
+        clickRet = earnBtn.click();
+        log("点击 赚步数: " + clickRet);
         if (clickRet == false) {
             commonAction.backTaoliveMainPage();
             return;
@@ -240,6 +265,7 @@ walkToEarn.doWalkRoutineTasks = function () {
             return;
         }
 
+        var shortBrowseTaskList = [];   //短时浏览任务列表，浏览完成后返回
         var browseTaskList = [];    //浏览任务列表，滑动浏览完成后返回
         var searchTaskList = [];    //搜索任务列表，搜索后返回
         var watchTaskList = [];     //观看任务列表，需要多次折返
@@ -249,7 +275,7 @@ walkToEarn.doWalkRoutineTasks = function () {
 
         for (var i = 0; i < validTasks.length; i++) {
             var taskItem = validTasks[i].parent();
-            var btn = taskItem.child(taskItem.length - 2);
+            var btn = taskItem.child(taskItem.childCount() - 2);
             if (btn.bounds().height() > 50) {
                 validTaskNames.push(taskItem.child(0).text());
             }
@@ -264,7 +290,7 @@ walkToEarn.doWalkRoutineTasks = function () {
         totalTasks.forEach(function(tv) {
             var taskItem = tv.parent();
             var title = taskItem.child(0).text();
-            var btn = taskItem.child(taskItem.length - 2);
+            var btn = taskItem.child(taskItem.childCount() - 2);
             if (btn != null) {
                 if (/去完成|去浏览/.test(btn.text()) && title.indexOf("邀请") == -1 && title.indexOf("支付宝") == -1) {
                     var obj = {};
@@ -275,18 +301,34 @@ walkToEarn.doWalkRoutineTasks = function () {
                         browseTaskList.push(obj);
                     } else if (obj.Title.indexOf("搜索") != -1) {
                         searchTaskList.push(obj);
+                    } else if (obj.Title.indexOf("直播") != -1 || obj.Title.indexOf("视频") != -1 || obj.Title.indexOf("分钟") != -1) {
+                       watchTaskList.push(obj);
                     } else {
-                        watchTaskList.push(obj);
+                        shortBrowseTaskList.push(obj);
                     }
-                    log("未完成任务" + (browseTaskList.length + searchTaskList.length + watchTaskList.length) + ": " + obj.Title + ", " + obj.BtnName + ", (" + obj.Button.bounds().centerX() + ", " + obj.Button.bounds().centerY() + ")");
+                    log("未完成任务" + (shortBrowseTaskList.length + browseTaskList.length + searchTaskList.length + watchTaskList.length) + ": " + obj.Title + ", " + obj.BtnName + ", (" + obj.Button.bounds().centerX() + ", " + obj.Button.bounds().centerY() + "), " + obj.Button.bounds().height());
                 } else {
-                    log("跳过任务: " + title + ", " + btn.text() + ", (" + btn.bounds().centerX() + ", " + btn.bounds().centerY() + ")");
+                    log("跳过任务: " + title + ", " + btn.text() + ", (" + btn.bounds().centerX() + ", " + btn.bounds().centerY() + "), " + btn.bounds().height());
                 }
             }
         });
 
-        if (browseTaskList.length + searchTaskList.length + watchTaskList.length == 0) {
+        var uncompleteTaskNum = shortBrowseTaskList.length + browseTaskList.length + searchTaskList.length + watchTaskList.length;
+        log("未完成任务数: " + uncompleteTaskNum);
+        if (uncompleteTaskNum == 0) {
             break;
+        }
+
+        shortBrowseTaskList = common.filterTaskList(shortBrowseTaskList, validTaskNames)
+        if (commonAction.doShortBrowseTasks(shortBrowseTaskList)) {
+            walkBtn = common.waitForText("text", "出发", true, 10);
+            if (walkBtn == null) {
+                break;
+            }
+            //等待成功提示消失
+            sleep(3000);
+            collectSteps();
+            continue;
         }
 
         browseTaskList = common.filterTaskList(browseTaskList, validTaskNames)
@@ -324,6 +366,8 @@ walkToEarn.doWalkRoutineTasks = function () {
             collectSteps();
             continue;
         }
+
+        log("上划任务列表: " + swipe(device.width / 5, device.height * 13 / 16, device.width / 5, device.height * 11 / 16, 200));
     }
 
     commonAction.backTaoliveMainPage();

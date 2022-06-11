@@ -77,13 +77,13 @@ collectStrength = function () {
 
     if (/\d+:\d+:\d+/.test(strengthLeftTime)) {
         log(strengthLeftTime + " 后 " + canGetStrength);
-    } else if (strengthLeftTime == "领取") {
+    } else if (strengthLeftTime == "去领取") {
         log("点击 收集体力: " + getStrengthBtn.click());
         // 要么出提示，不需要点击，要么弹任务框需要点击关闭
         var getStrengthTips = textMatches(/去领体力/).findOne(5000);
         if (getStrengthTips != null) {
             var dlgCloseBtn = getStrengthTips.parent().parent().child(1);
-            log(getStrengthTips.text() + " 关闭: " + dlgCloseBtn.click());
+            log(getStrengthTips.text() + " 关闭: " + click(dlgCloseBtn.bounds().centerX(), dlgCloseBtn.bounds().centerY()));
             sleep(1000);
         }
         strengthBalance = parseInt(exchangeBtn.parent().child(4).text());
@@ -92,7 +92,40 @@ collectStrength = function () {
         log("体力剩余时间: " + strengthLeftTime);
     }
 
-    common.safeSet(common.lastWorkToEarnCollectTag, Math.floor(new Date().getTime() / 1000));
+    strengthLeftTime = "";
+    for (var i = 1; i < getStrengthBtn.childCount(); i++) {
+        if (getStrengthBtn.child(i).className() == "android.view.View") {
+            strengthLeftTime = strengthLeftTime + getStrengthBtn.child(i).text();
+        }
+    }
+
+    log("下次领取体力剩余时间: " + strengthLeftTime);
+    var now = new Date().getTime();
+    var orgNextCheckTimestamp = parseInt(common.safeGet(common.nextCheckTimestampTag));
+    //检查时间过期了置为null
+    if (!isNaN(orgNextCheckTimestamp) && now > orgNextCheckTimestamp) {
+        common.safeSet(common.nextCheckTimestampTag, null);
+        log(common.nextCheckTimestampTag + " 过期: " + common.timestampToTime(orgNextCheckTimestamp));
+    }
+
+    if (/\d+:\d+:\d+/.test(strengthLeftTime)) {
+        var HHmmss = strengthLeftTime.match(/\d+/g);
+        var newNextCheckTimestamp = now + (parseInt(HHmmss[0]) * 3600 + parseInt(HHmmss[1]) * 60 + parseInt(HHmmss[2])) * 1000;
+        log("下次领取体力时间: " + common.timestampToTime(orgNextCheckTimestamp));
+        var orgNextCheckTimestamp = parseInt(common.safeGet(common.nextCheckTimestampTag));
+        if (!isNaN(orgNextCheckTimestamp)) {
+            //检查时间没过期，看是否比原来的近，近就更新
+            if (newNextCheckTimestamp < orgNextCheckTimestamp) {
+                common.safeSet(common.nextCheckTimestampTag, newNextCheckTimestamp);
+                log(common.nextCheckTimestampTag + " 从 " + common.timestampToTime(orgNextCheckTimestamp) + " 更新为: " + common.timestampToTime(newNextCheckTimestamp));
+            } else {
+                log(common.nextCheckTimestampTag + "不变: " + common.timestampToTime(orgNextCheckTimestamp));
+            }
+        } else {
+            common.safeSet(common.nextCheckTimestampTag, newNextCheckTimestamp);
+            log(common.nextCheckTimestampTag + " 设置为: " + common.timestampToTime(newNextCheckTimestamp));
+        }
+    }
 
     //打工完成了先点击领取元宝，再选工作继续打工赚钱
     if (/领取\d+元宝/.test(workBtn.text())) {
@@ -274,7 +307,7 @@ workToEarn.doWorkRoutineTasks = function () {
     var earnBtn = threeBtnsBar.child(2);
     for (;;) {
         var clickRet = earnBtn.click();
-        log("点击 赚体力(" + earnBtn.bounds().centerX() + ", " + earnBtn.bounds().centerY() + "): " + clickRet);
+        log("点击 赚体力: " + clickRet);
         if (clickRet == false) {
             commonAction.backTaoliveMainPage();
             return;
@@ -296,7 +329,7 @@ workToEarn.doWorkRoutineTasks = function () {
 
         for (var i = 0; i < validTasks.length; i++) {
             var taskItem = validTasks[i].parent();
-            var btn = taskItem.child(taskItem.length - 2);
+            var btn = taskItem.child(taskItem.childCount() - 2);
             if (btn.bounds().height() > 50) {
                 validTaskNames.push(taskItem.child(0).text());
             }
@@ -309,10 +342,9 @@ workToEarn.doWorkRoutineTasks = function () {
         }
 
         totalTasks.forEach(function(tv) {
-            var objs = [];
             var taskItem = tv.parent();
             var title = taskItem.child(0).text();
-            var btn = taskItem.child(taskItem.length - 2);
+            var btn = taskItem.child(taskItem.childCount() - 2);
             if (btn != null) {
                 if (/去完成|去浏览/.test(btn.text()) && 
                     title.indexOf("邀请") == -1 && 
@@ -329,17 +361,19 @@ workToEarn.doWorkRoutineTasks = function () {
                         browseTaskList.push(obj);
                     } else if (obj.Title.indexOf("搜索") != -1) {
                         searchTaskList.push(obj);
-                    } else {
-                        watchTaskList.push(obj);
+                    } else if (obj.Title.indexOf("直播") != -1 || obj.Title.indexOf("视频") != -1 || obj.Title.indexOf("分钟") != -1) {
+                       watchTaskList.push(obj);
                     }
-                    log("未完成任务" + (browseTaskList.length + searchTaskList.length + watchTaskList.length) + ": " + obj.Title + ", " + obj.BtnName + ", (" + obj.Button.bounds().centerX() + ", " + obj.Button.bounds().centerY() + ")");
+                    log("未完成任务" + (browseTaskList.length + searchTaskList.length + watchTaskList.length) + ": " + obj.Title + ", " + obj.BtnName + ", (" + obj.Button.bounds().centerX() + ", " + obj.Button.bounds().centerY() + "), " + obj.Button.bounds().height());
                 } else {
-                    log("跳过任务: " + title + ", " + btn.text() + ", (" + btn.bounds().centerX() + ", " + btn.bounds().centerY() + ")");
+                    log("跳过任务: " + title + ", " + btn.text() + ", (" + btn.bounds().centerX() + ", " + btn.bounds().centerY() + "), " + btn.bounds().height());
                 }
             }
         });
 
-        if (browseTaskList.length + searchTaskList.length + watchTaskList.length == 0) {
+        var uncompleteTaskNum = browseTaskList.length + searchTaskList.length + watchTaskList.length;
+        log("未完成任务数: " + uncompleteTaskNum);
+        if (uncompleteTaskNum == 0) {
             break;
         }
 
@@ -363,6 +397,8 @@ workToEarn.doWorkRoutineTasks = function () {
             sleep(3000);
             continue;
         }
+
+        log("上划任务列表: " + swipe(device.width / 5, device.height * 13 / 16, device.width / 5, device.height * 11 / 16, 200));
     }
 
     commonAction.backTaoliveMainPage();

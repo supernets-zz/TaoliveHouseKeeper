@@ -129,16 +129,18 @@ shakeToEarn.doShakeRoutineTasks = function () {
                     browseTaskList.push(obj);
                 } else if (obj.Title.indexOf("搜索") != -1) {
                     searchTaskList.push(obj);
-                } else {
-                    watchTaskList.push(obj);
+                } else if (obj.Title.indexOf("直播") != -1 || obj.Title.indexOf("视频") != -1 || obj.Title.indexOf("分钟") != -1) {
+                   watchTaskList.push(obj);
                 }
-                log("未完成任务" + (browseTaskList.length + searchTaskList.length + watchTaskList.length) + ": " + obj.Title + ", " + obj.BtnName + ", (" + obj.Button.bounds().centerX() + ", " + obj.Button.bounds().centerY() + ")");
+                log("未完成任务" + (browseTaskList.length + searchTaskList.length + watchTaskList.length) + ": " + obj.Title + ", " + obj.BtnName + ", (" + obj.Button.bounds().centerX() + ", " + obj.Button.bounds().centerY() + "), " + obj.Button.bounds().height());
             } else {
-                log("跳过任务: " + title + ", " + btn.text() + ", (" + btn.bounds().centerX() + ", " + btn.bounds().centerY() + ")");
+                log("跳过任务: " + title + ", " + btn.text() + ", (" + btn.bounds().centerX() + ", " + btn.bounds().centerY() + "), " + btn.bounds().height());
             }
         });
 
-        if (browseTaskList.length + searchTaskList.length + watchTaskList.length == 0) {
+        var uncompleteTaskNum = browseTaskList.length + searchTaskList.length + watchTaskList.length;
+        log("未完成任务数: " + uncompleteTaskNum);
+        if (uncompleteTaskNum == 0) {
             break;
         }
 
