@@ -113,6 +113,8 @@ shakeToEarn.doShakeRoutineTasks = function () {
             break;
         }
 
+        var canWatch = common.canWatch();
+        log("canWatch: " + canWatch);
         totalTasks.forEach(function(tv) {
             var taskItem = tv.parent();
             var title = taskItem.child(0).text();   //任务名称在第一个
@@ -129,8 +131,8 @@ shakeToEarn.doShakeRoutineTasks = function () {
                     browseTaskList.push(obj);
                 } else if (obj.Title.indexOf("搜索") != -1) {
                     searchTaskList.push(obj);
-                } else if (obj.Title.indexOf("直播") != -1 || obj.Title.indexOf("视频") != -1 || obj.Title.indexOf("分钟") != -1) {
-                   watchTaskList.push(obj);
+                } else if ((obj.Title.indexOf("直播") != -1 || obj.Title.indexOf("视频") != -1 || obj.Title.indexOf("分钟") != -1) && canWatch) {
+                    watchTaskList.push(obj);
                 }
                 log("未完成任务" + (browseTaskList.length + searchTaskList.length + watchTaskList.length) + ": " + obj.Title + ", " + obj.BtnName + ", (" + obj.Button.bounds().centerX() + ", " + obj.Button.bounds().centerY() + "), " + obj.Button.bounds().height());
             } else {

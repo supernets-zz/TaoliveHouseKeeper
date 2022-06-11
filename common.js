@@ -8,8 +8,9 @@ common.taolivePackageName = "com.taobao.live";
 common.walkToEarnPermissionTag = "走路赚元宝准入";
 
 //走路与打工的视频直播观看任务需要在签到、睡觉、成功打工、摇一摇视频直播任务之后才能执行
-//Min(下一次走路赚元宝领能量饮料, 下一次打工赚元宝领体力, 下一次走路赚元宝准入检查时间戳, 下一个整点检查时间戳)
-common.nextCheckTimestampTag = "下一次检查时间戳";  //带毫秒
+//Min(下一次走路赚元宝领能量饮料, 下一次打工赚元宝领体力, 下一个整点检查时间戳)
+common.nextWalkCheckTimestampTag = "下一次能量饮料检查时间戳";  //带毫秒
+common.nextWorkCheckTimestampTag = "下一次体力领取检查时间戳";  //带毫秒
 
 var storagelock = threads.lock();
 var localStorages = storages.create(common.appName+":global");
@@ -164,6 +165,37 @@ common.grantWalkToEarnPermission = function () {
 
     common.safeSet(nowDate + ":" + this.walkToEarnPermissionTag, true);
     log(this.walkToEarnPermissionTag + " : 允许进入");
+}
+
+common.canWatch = function () {
+    var now = new Date().getTime();
+    var walkTS = null;
+    var workTS = null;
+    var nowDate = new Date().Format("yyyy-MM-dd");
+    var permitted = common.safeGet(nowDate + ":" + this.walkToEarnPermissionTag);
+    if (permitted != null) {
+        var tmp = parseInt(common.safeGet(this.nextWalkCheckTimestampTag));
+        if (!isNaN(tmp)) {
+            walkTS = tmp;
+        }
+    }
+
+    var tmp = parseInt(common.safeGet(this.nextWorkCheckTimestampTag));
+    if (!isNaN(tmp)) {
+        workTS = tmp;
+    }
+
+    log("walkTS: " + this.timestampToTime(walkTS) + ", workTS: " + this.timestampToTime(workTS));
+    //当前时间小于Min(领取能量饮料, 领取体力)的时间才允许做视频任务
+    if (walkTS == null && workTS == null) {
+        return false;
+    } else if (walkTS == null && workTS != null) {
+        return now < workTS;
+    } else if (walkTS != null && walkTS == null) {
+        return now < walkTS;
+    } else {
+        return now < Math.min(walkTS, workTS);
+    }
 }
 
 module.exports = common;

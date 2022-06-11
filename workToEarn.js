@@ -101,29 +101,29 @@ collectStrength = function () {
 
     log("下次领取体力剩余时间: " + strengthLeftTime);
     var now = new Date().getTime();
-    var orgNextCheckTimestamp = parseInt(common.safeGet(common.nextCheckTimestampTag));
+    var orgNextWorkCheckTimestamp = parseInt(common.safeGet(common.nextWorkCheckTimestampTag));
     //检查时间过期了置为null
-    if (!isNaN(orgNextCheckTimestamp) && now > orgNextCheckTimestamp) {
-        common.safeSet(common.nextCheckTimestampTag, null);
-        log(common.nextCheckTimestampTag + " 过期: " + common.timestampToTime(orgNextCheckTimestamp));
+    if (!isNaN(orgNextWorkCheckTimestamp) && now > orgNextWorkCheckTimestamp) {
+        common.safeSet(common.nextWorkCheckTimestampTag, null);
+        log(common.nextWorkCheckTimestampTag + " 过期: " + common.timestampToTime(orgNextWorkCheckTimestamp));
     }
 
     if (/\d+:\d+:\d+/.test(strengthLeftTime)) {
         var HHmmss = strengthLeftTime.match(/\d+/g);
-        var newNextCheckTimestamp = now + (parseInt(HHmmss[0]) * 3600 + parseInt(HHmmss[1]) * 60 + parseInt(HHmmss[2])) * 1000;
-        log("下次领取体力时间: " + common.timestampToTime(orgNextCheckTimestamp));
-        var orgNextCheckTimestamp = parseInt(common.safeGet(common.nextCheckTimestampTag));
-        if (!isNaN(orgNextCheckTimestamp)) {
+        var newNextWorkCheckTimestamp = now + (parseInt(HHmmss[0]) * 3600 + parseInt(HHmmss[1]) * 60 + parseInt(HHmmss[2])) * 1000;
+        log("下次领取体力时间: " + common.timestampToTime(orgNextWorkCheckTimestamp));
+        var orgNextWorkCheckTimestamp = parseInt(common.safeGet(common.nextWorkCheckTimestampTag));
+        if (!isNaN(orgNextWorkCheckTimestamp)) {
             //检查时间没过期，看是否比原来的近，近就更新
-            if (newNextCheckTimestamp < orgNextCheckTimestamp) {
-                common.safeSet(common.nextCheckTimestampTag, newNextCheckTimestamp);
-                log(common.nextCheckTimestampTag + " 从 " + common.timestampToTime(orgNextCheckTimestamp) + " 更新为: " + common.timestampToTime(newNextCheckTimestamp));
+            if (newNextWorkCheckTimestamp < orgNextWorkCheckTimestamp) {
+                common.safeSet(common.nextWorkCheckTimestampTag, newNextWorkCheckTimestamp);
+                log(common.nextWorkCheckTimestampTag + " 从 " + common.timestampToTime(orgNextWorkCheckTimestamp) + " 更新为: " + common.timestampToTime(newNextWorkCheckTimestamp));
             } else {
-                log(common.nextCheckTimestampTag + "不变: " + common.timestampToTime(orgNextCheckTimestamp));
+                log(common.nextWorkCheckTimestampTag + "不变: " + common.timestampToTime(orgNextWorkCheckTimestamp));
             }
         } else {
-            common.safeSet(common.nextCheckTimestampTag, newNextCheckTimestamp);
-            log(common.nextCheckTimestampTag + " 设置为: " + common.timestampToTime(newNextCheckTimestamp));
+            common.safeSet(common.nextWorkCheckTimestampTag, newNextWorkCheckTimestamp);
+            log(common.nextWorkCheckTimestampTag + " 设置为: " + common.timestampToTime(newNextWorkCheckTimestamp));
         }
     }
 
@@ -341,6 +341,8 @@ workToEarn.doWorkRoutineTasks = function () {
             break;
         }
 
+        var canWatch = common.canWatch();
+        log("canWatch: " + canWatch);
         totalTasks.forEach(function(tv) {
             var taskItem = tv.parent();
             var title = taskItem.child(0).text();
@@ -361,8 +363,8 @@ workToEarn.doWorkRoutineTasks = function () {
                         browseTaskList.push(obj);
                     } else if (obj.Title.indexOf("搜索") != -1) {
                         searchTaskList.push(obj);
-                    } else if (obj.Title.indexOf("直播") != -1 || obj.Title.indexOf("视频") != -1 || obj.Title.indexOf("分钟") != -1) {
-                       watchTaskList.push(obj);
+                    } else if ((obj.Title.indexOf("直播") != -1 || obj.Title.indexOf("视频") != -1 || obj.Title.indexOf("分钟") != -1) && canWatch) {
+                        watchTaskList.push(obj);
                     }
                     log("未完成任务" + (browseTaskList.length + searchTaskList.length + watchTaskList.length) + ": " + obj.Title + ", " + obj.BtnName + ", (" + obj.Button.bounds().centerX() + ", " + obj.Button.bounds().centerY() + "), " + obj.Button.bounds().height());
                 } else {

@@ -92,29 +92,29 @@ collectSteps = function () {
     energyLeftTime = energyBtn.child(1);
     log("下次能量饮料剩余时间: " + energyLeftTime.text());
     var now = new Date().getTime();
-    var orgNextCheckTimestamp = parseInt(common.safeGet(common.nextCheckTimestampTag));
+    var orgNextWallCheckTimestamp = parseInt(common.safeGet(common.nextWalkCheckTimestampTag));
     //检查时间过期了置为null
-    if (!isNaN(orgNextCheckTimestamp) && now > orgNextCheckTimestamp) {
-        common.safeSet(common.nextCheckTimestampTag, null);
-        log(common.nextCheckTimestampTag + " 过期: " + common.timestampToTime(orgNextCheckTimestamp));
+    if (!isNaN(orgNextWallCheckTimestamp) && now > orgNextWallCheckTimestamp) {
+        common.safeSet(common.nextWalkCheckTimestampTag, null);
+        log(common.nextWalkCheckTimestampTag + " 过期: " + common.timestampToTime(orgNextWallCheckTimestamp));
     }
 
     if (/\d+:\d+:\d+/.test(energyLeftTime.text())) {
         var HHmmss = energyLeftTime.text().match(/\d+/g);
-        var newNextCheckTimestamp = now + (parseInt(HHmmss[0]) * 3600 + parseInt(HHmmss[1]) * 60 + parseInt(HHmmss[2])) * 1000;
-        log("下次领取饮料时间: " + common.timestampToTime(newNextCheckTimestamp));
-        var orgNextCheckTimestamp = parseInt(common.safeGet(common.nextCheckTimestampTag));
-        if (!isNaN(orgNextCheckTimestamp)) {
+        var newNextWalkCheckTimestamp = now + (parseInt(HHmmss[0]) * 3600 + parseInt(HHmmss[1]) * 60 + parseInt(HHmmss[2])) * 1000;
+        log("下次领取饮料时间: " + common.timestampToTime(newNextWalkCheckTimestamp));
+        var orgNextWalkCheckTimestamp = parseInt(common.safeGet(common.nextWalkCheckTimestampTag));
+        if (!isNaN(orgNextWalkCheckTimestamp)) {
             //检查时间没过期，看是否比原来的近，近就更新
-            if (newNextCheckTimestamp < orgNextCheckTimestamp) {
-                common.safeSet(common.nextCheckTimestampTag, newNextCheckTimestamp);
-                log(common.nextCheckTimestampTag + " 从 " + common.timestampToTime(orgNextCheckTimestamp) + " 更新为: " + common.timestampToTime(newNextCheckTimestamp));
+            if (newNextWalkCheckTimestamp < orgNextWalkCheckTimestamp) {
+                common.safeSet(common.nextWalkCheckTimestampTag, newNextWalkCheckTimestamp);
+                log(common.nextWalkCheckTimestampTag + " 从 " + common.timestampToTime(orgNextWalkCheckTimestamp) + " 更新为: " + common.timestampToTime(newNextWalkCheckTimestamp));
             } else {
-                log(common.nextCheckTimestampTag + "不变: " + common.timestampToTime(orgNextCheckTimestamp));
+                log(common.nextWalkCheckTimestampTag + "不变: " + common.timestampToTime(orgNextWalkCheckTimestamp));
             }
         } else {
-            common.safeSet(common.nextCheckTimestampTag, newNextCheckTimestamp);
-            log(common.nextCheckTimestampTag + " 设置为: " + common.timestampToTime(newNextCheckTimestamp));
+            common.safeSet(common.nextWalkCheckTimestampTag, newNextWalkCheckTimestamp);
+            log(common.nextWalkCheckTimestampTag + " 设置为: " + common.timestampToTime(newNextWalkCheckTimestamp));
         }
     }
 
@@ -287,6 +287,8 @@ walkToEarn.doWalkRoutineTasks = function () {
             break;
         }
 
+        var canWatch = common.canWatch();
+        log("canWatch: " + canWatch);
         totalTasks.forEach(function(tv) {
             var taskItem = tv.parent();
             var title = taskItem.child(0).text();
@@ -301,8 +303,8 @@ walkToEarn.doWalkRoutineTasks = function () {
                         browseTaskList.push(obj);
                     } else if (obj.Title.indexOf("搜索") != -1) {
                         searchTaskList.push(obj);
-                    } else if (obj.Title.indexOf("直播") != -1 || obj.Title.indexOf("视频") != -1 || obj.Title.indexOf("分钟") != -1) {
-                       watchTaskList.push(obj);
+                    } else if ((obj.Title.indexOf("直播") != -1 || obj.Title.indexOf("视频") != -1 || obj.Title.indexOf("分钟") != -1) && canWatch) {
+                        watchTaskList.push(obj);
                     } else {
                         shortBrowseTaskList.push(obj);
                     }

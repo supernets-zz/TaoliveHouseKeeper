@@ -271,8 +271,8 @@ commonAction.doWatchTasks = function (tasklist) {
             var closeBtn = id("taolive_close_btn").findOne(1000);
             var startTick = new Date().getTime();
             for (;;) {
-                var countdown = text("后完成").findOne(1000);
                 var prog = text("6/6").findOne(1000);
+                var countdown = text("后完成").findOne(1000);
                 log("pass" + (nowTime - startTime) + "s, countdown: " + (countdown != null) + ", 6/6 exists: " + (prog != null) + ", live: " + (closeBtn != null));
                 if (countdown == null) {
                     if (new Date().getTime() - startTick > 10 * 1000) {
@@ -281,18 +281,6 @@ commonAction.doWatchTasks = function (tasklist) {
                     captureScreen("/sdcard/Download/watch" + (new Date().Format("yyyy-MM-dd_HH:mm:ss")) + ".png");
                 }
 
-                //红包雨弹窗提示
-                var rule = text("活动规则").findOne(1000);
-                if (rule != null) {
-                    var dlgCloseBtn = rule.parent().parent().parent().child(0);
-                    log("红包雨弹窗 关闭: " + dlgCloseBtn.click());
-                }
-
-                var tryAgainBtn = text("再来一次").findOne(1000);
-                if (tryAgainBtn != null) {
-                    var dlgCloseBtn = tryAgainBtn.parent().parent().parent().child(1);
-                    log("啊哦，这次没抢到红包 关闭: " + click(dlgCloseBtn.bounds().centerX(), dlgCloseBtn.bounds().centerY()));
-                }
                 nowTime = parseInt(new Date().getTime() / 1000);
                 //十五分钟超时，最长的任务是8分钟
                 if (nowTime - startTime > 15 * 60) {
@@ -314,6 +302,19 @@ commonAction.doWatchTasks = function (tasklist) {
                         }
                     }
                     sleep(interval);
+                }
+
+                //红包雨弹窗提示
+                var rule = text("活动规则").findOne(1000);
+                if (rule != null) {
+                    var dlgCloseBtn = rule.parent().parent().parent().child(0);
+                    log("红包雨弹窗 关闭: " + dlgCloseBtn.click());
+                }
+
+                var tryAgainBtn = text("再来一次").findOne(1000);
+                if (tryAgainBtn != null) {
+                    var dlgCloseBtn = tryAgainBtn.parent().parent().parent().child(1);
+                    log("啊哦，这次没抢到红包 关闭: " + click(dlgCloseBtn.bounds().centerX(), dlgCloseBtn.bounds().centerY()));
                 }
             }
 

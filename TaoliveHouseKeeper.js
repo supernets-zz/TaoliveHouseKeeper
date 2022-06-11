@@ -141,32 +141,23 @@ threads.start(function(){
         log("isAllDailyTaskComplete: " + allComplete + ", mainWorker return: " + ret);
         if (allComplete && ret) {
             var now = new Date().getTime();
-            var orgNextCheckTimestamp = parseInt(common.safeGet(common.nextCheckTimestampTag));
-            log("原 " + common.nextCheckTimestampTag + ": " + common.timestampToTime(orgNextCheckTimestamp));
-            //检查时间过期了置为null
-            if (!isNaN(orgNextCheckTimestamp) && now > orgNextCheckTimestamp) {
-                common.safeSet(common.nextCheckTimestampTag, null);
-                log(common.nextCheckTimestampTag + " 过期: " + common.timestampToTime(orgNextCheckTimestamp));
+            var nextWalkCheckTS = parseInt(common.safeGet(common.nextWalkCheckTimestampTag));
+            var nextWorkCheckTS = parseInt(common.safeGet(common.nextWorkCheckTimestampTag));
+            var nextPeriodCheckTS = parseInt((now + execInterval * 1000) / (execInterval * 1000)) * (execInterval * 1000);
+            log(common.nextWalkCheckTimestampTag + ": " + common.timestampToTime(nextWalkCheckTS) + ", " +
+                common.nextWorkCheckTimestampTag + ": " + common.timestampToTime(nextWorkCheckTS) + ", " +
+                "下周期检查时间戳: " + common.timestampToTime(nextPeriodCheckTS));
+
+            var finalNextCheckTS = nextPeriodCheckTS;
+            if (!isNaN(nextWalkCheckTS)) {
+                finalNextCheckTS = Math.min(finalNextCheckTS, nextWalkCheckTS);
+            }
+            if (!isNaN(nextWorkCheckTS)) {
+                finalNextCheckTS = Math.min(finalNextCheckTS, nextWorkCheckTS);
             }
 
-            var newNextCheckTimestamp = parseInt((now + execInterval * 1000) / (execInterval * 1000)) * (execInterval * 1000);
-            orgNextCheckTimestamp = parseInt(common.safeGet(common.nextCheckTimestampTag));
-            if (!isNaN(orgNextCheckTimestamp)) {
-                //检查时间没过期，看是否比原来的近，近就更新
-                if (newNextCheckTimestamp < orgNextCheckTimestamp) {
-                    common.safeSet(common.nextCheckTimestampTag, newNextCheckTimestamp);
-                    log(common.nextCheckTimestampTag + " 从 " + common.timestampToTime(orgNextCheckTimestamp) + " 更新为: " + common.timestampToTime(newNextCheckTimestamp));
-                } else {
-                    log(common.nextCheckTimestampTag + "不变: " + common.timestampToTime(orgNextCheckTimestamp));
-                }
-            } else {
-                common.safeSet(common.nextCheckTimestampTag, newNextCheckTimestamp);
-                log(common.nextCheckTimestampTag + " 设置为: " + common.timestampToTime(newNextCheckTimestamp));
-            }
-
-            var finalNextCheckTimestamp = common.safeGet(common.nextCheckTimestampTag);
-            log(Math.floor((finalNextCheckTimestamp - now) / 1000) + "s 后的 " + common.timestampToTime(finalNextCheckTimestamp) + " 进行下一次检查");
-            sleep(finalNextCheckTimestamp - now);
+            log(Math.floor((finalNextCheckTS - now) / 1000) + "s 后的 " + common.timestampToTime(finalNextCheckTS) + " 进行下一次检查");
+            sleep(finalNextCheckTS - now);
         }
     }
 });
@@ -174,8 +165,11 @@ threads.start(function(){
 function isAllDailyTaskComplete() {
     var nowDate = new Date().Format("yyyy-MM-dd");
     var taskList = [];
+    var permitted = common.safeGet(nowDate + ":" + common.walkToEarnPermissionTag);
+    if (permitted != null) {
+        taskList.push.apply(taskList, walkToEarn.dailyJobs);
+    }
     taskList.push.apply(taskList, shakeToEarn.dailyJobs);
-    taskList.push.apply(taskList, walkToEarn.dailyJobs);
     taskList.push.apply(taskList, workToEarn.dailyJobs);
     taskList.push.apply(taskList, sleepToEarn.dailyJobs);
     for (var i = 0; i < taskList.length; i++) {
