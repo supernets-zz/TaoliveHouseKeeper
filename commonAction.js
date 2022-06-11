@@ -174,7 +174,7 @@ commonAction.scrollThrough = function (txt, timeout) {
         if (slide == null || nowTime - startTime > timeout || slide != null && slide.bounds().height() < 10) {
             break;
         }
-        swipe(device.width / 5, device.height * 13 / 16, device.width / 5, device.height * 11 / 16, 200);
+        swipe(device.width / 5, device.height * 13 / 16, device.width / 5, device.height * 11 / 16, Math.floor(Math.random() * 200) + 200);
         sleep(1000);
     }
 
@@ -262,8 +262,10 @@ commonAction.doWatchTasks = function (tasklist) {
     for (var i = 0; i < tasklist.length; i++) {
         toastLog("点击 " + tasklist[i].Title + " " + tasklist[i].BtnName + ": " + click(tasklist[i].Button.bounds().centerX(), tasklist[i].Button.bounds().centerY()));
         // 等待离开任务列表页面
-        if (common.waitForText("text", "后完成", true, 10)) {
-            var interval = 10000;
+        var countdown = common.waitForText("text", "后完成", true, 10)
+        if (countdown) {
+            var lastLeftTime = parseInt(countdown.parent().child(1).text().match(/\d+/));
+            var interval = 3000;    //interval加上红包雨弹窗提示检测2秒正好5秒一个周期
             var startTime = parseInt(new Date().getTime() / 1000);
             var nowTime = parseInt(new Date().getTime() / 1000);
             var closeBtn = id("taolive_close_btn").findOne(1000);
@@ -303,7 +305,13 @@ commonAction.doWatchTasks = function (tasklist) {
                 } else {
                     if (closeBtn == null) {
                         var swipeXY = swipeChoice[Math.floor(Math.random() * swipeChoice.length)];
-                        log("swipe " + swipe(device.width / 2, swipeXY[0], device.width / 2, swipeXY[1], 1000));
+                        var leftTime = parseInt(countdown.parent().child(1).text().match(/\d+/));
+                        if (leftTime == lastLeftTime) {
+                            log("swipe " + swipe(device.width / 2, swipeXY[0], device.width / 2, swipeXY[1], 1000));
+                            lastLeftTime = leftTime;
+                        } else {
+                            lastLeftTime = leftTime;
+                        }
                     }
                     sleep(interval);
                 }
