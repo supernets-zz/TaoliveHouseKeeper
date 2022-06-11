@@ -71,7 +71,9 @@ signInEarn.doSignIn = function () {
     }
 
     log("点击 去签到: " + click(btnSignIn.bounds().centerX(), btnSignIn.bounds().centerY()));
+    sleep(5000);
 
+    //在正常收益阶段未签到的情况下进到这里app就会自动签到
     //提示语"签到提醒"
     var signInReminder = common.waitForText("text", "签到提醒", true, 10);
     var signInFrame = signInReminder.parent();
@@ -84,7 +86,7 @@ signInEarn.doSignIn = function () {
             if (signInItem.child(signInItem.childCount() - 1).className() == "android.view.View") {
                 log(signInItem.child(signInItem.childCount() - 1).text());
                 if (signInItem.child(signInItem.childCount() - 1).text() == "立即签到") {
-                    log(new Date().Format("MM.dd") + " 签到: " + signInItem.click());
+                    log("点击 立即签到: " + signInItem.click());
                     sleep(1000);
                     break;
                 }
@@ -96,7 +98,7 @@ signInEarn.doSignIn = function () {
             if (lastSignInItem.child(lastSignInItem.childCount() - 1).className() == "android.view.View") {
                 log(lastSignInItem.child(lastSignInItem.childCount() - 1).text());
                 if (lastSignInItem.child(lastSignInItem.childCount() - 1).text() == "立即签到") {
-                    log(new Date().Format("MM.dd") + " 签到: " + lastSignInItem.click());
+                    log("点击 立即签到: " + lastSignInItem.click());
                     sleep(1000);
                     break;
                 }
