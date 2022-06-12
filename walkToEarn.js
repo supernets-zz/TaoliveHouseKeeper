@@ -13,11 +13,18 @@ walkToEarn.dailyJobs.push(streetTag);
 gotoWalkEarnCoins = function () {
     var walkBtn = null;
 
+    var urgentTime = common.checkAuditTime("15:00", "24:00");
     var nowDate = new Date().Format("yyyy-MM-dd");
-    var permission = common.safeGet(nowDate + ":" + common.walkToEarnPermissionTag);
-    if (permission == null) {
-        log(common.walkToEarnPermissionTag + " : " + permission);
-        return walkBtn;
+    var permitted = common.safeGet(nowDate + ":" + common.walkToEarnPermissionTag);
+    log("permitted: " + permitted + ", [15:00~24:00]: " + urgentTime);
+    if (permitted == null) {
+        log(common.walkToEarnPermissionTag + " : " + permitted);
+        if (urgentTime) {
+            //15点后还拿不到正常收益就强行进入走路赚元宝，能量饮料领取完需要7个多小时
+            common.grantWalkToEarnPermission();
+        } else {
+            return walkBtn;
+        }
     }
 
     if (!commonAction.gotoCoinCenter()) {
