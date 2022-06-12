@@ -150,6 +150,35 @@ common.waitForTextMatches = function (regex, visible, sec) {
     return obj;
 }
 
+common.findImage = function (tmpl) {
+    var img = captureScreen();
+    var templ = images.read(tmpl);
+    point = findImage(img, templ);
+    if (point != null) {
+        point.x = point.x + Math.floor(templ.getWidth() / 2);
+        point.y = point.y + Math.floor(templ.getHeight() / 2);
+    }
+    templ.recycle();
+    return point;
+}
+
+common.waitForImage = function (tmpl, sec) {
+    var point = null;
+    var startTick = new Date();
+    for (;(new Date().getTime() - startTick) / 1000 < sec && point == null;) {
+        point = common.findImage(tmpl);
+        if (point) {
+            log(tmpl + " 出现 (" + point.x + ", " + point.y + ")");
+            break;
+        } else {
+            log("等待 " + tmpl + " 出现");
+        }
+        sleep(5000);
+    }
+    //log(tmpl + " 出现" + point);
+    return point;
+}
+
 //返回是否超时
 common.waitDismiss = function (method, txt, sec) {
     // 等待离开"进入并关注"任务列表页面

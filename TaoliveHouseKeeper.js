@@ -9,6 +9,7 @@ var workToEarn = require("./workToEarn.js");
 var shakeToEarn = require("./shakeToEarn.js");
 var sleepToEarn = require("./sleepToEarn.js");
 var signInEarn = require("./signInEarn.js");
+var eliminateToEarn = require("./eliminateToEarn.js");
 
 var shutdownFlag = threads.atomic();
 var background = threads.disposable();
@@ -200,6 +201,8 @@ function mainWorker() {
             toastLog("Taolive is unknown status");
             captureScreen("/sdcard/Download/" + (new Date().Format("yyyy-MM-dd HH:mm:ss")) + ".png");
         } else {
+            // 我的-> 元宝中心-> 去游戏
+            eliminateToEarn.doEliminate();
             // 我的-> 元宝中心-> 去签到 主页
             // 因为签到只有在收益正常的时候才能成功，故作为走路赚元宝准人判断的依据
             signInEarn.doSignIn();
