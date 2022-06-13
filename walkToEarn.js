@@ -166,7 +166,7 @@ walkToEarn.doWalkMainBrowse = function () {
 
     toast("doWalkMainBrowse");
     if (gotoWalkEarnCoins() == null) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -186,7 +186,7 @@ walkToEarn.doWalkMainBrowse = function () {
         toastLog("无 " + browseTag);
     }
 
-    commonAction.backTaoliveMainPage();
+    commonAction.backToAppMainPage();
 }
 
 walkToEarn.doWalkStreetBrowse = function () {
@@ -201,7 +201,7 @@ walkToEarn.doWalkStreetBrowse = function () {
 
     toast("doWalkStreetBrowse");
     if (gotoWalkEarnCoins() == null) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -222,7 +222,7 @@ walkToEarn.doWalkStreetBrowse = function () {
         toastLog("无 " + streetTag);
     }
 
-    commonAction.backTaoliveMainPage();
+    commonAction.backToAppMainPage();
 }
 
 //走路赚元宝周期任务
@@ -232,7 +232,7 @@ walkToEarn.doWalkRoutineTasks = function () {
     // 出发按钮
     var walkBtn = gotoWalkEarnCoins();
     if (walkBtn == null) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -245,13 +245,13 @@ walkToEarn.doWalkRoutineTasks = function () {
         clickRet = earnBtn.click();
         log("点击 赚步数: " + clickRet);
         if (clickRet == false) {
-            commonAction.backTaoliveMainPage();
+            commonAction.backToAppMainPage();
             return;
         }
 
         walkBtn = common.waitForText("text", "得步数", true, 10);
         if (walkBtn == null) {
-            commonAction.backTaoliveMainPage();
+            commonAction.backToAppMainPage();
             return;
         }
 
@@ -261,8 +261,8 @@ walkToEarn.doWalkRoutineTasks = function () {
             var searchTaskList = [];    //搜索任务列表，搜索后返回
             var watchTaskList = [];     //观看任务列表，需要多次折返
             var validTaskNames = [];
-            var totalTasks = packageName(common.taolivePackageName).text("得步数").find();
-            var validTasks = packageName(common.taolivePackageName).text("得步数").visibleToUser(true).find();
+            var totalTasks = packageName(common.destPackageName).text("得步数").find();
+            var validTasks = packageName(common.destPackageName).text("得步数").visibleToUser(true).find();
 
             for (var i = 0; i < validTasks.length; i++) {
                 var taskItem = validTasks[i].parent();
@@ -275,7 +275,7 @@ walkToEarn.doWalkRoutineTasks = function () {
 
             if (totalTasks.length == 0) {
                 captureScreen("/sdcard/Download/" + (new Date().Format("yyyy-MM-dd HH:mm:ss")) + ".png");
-                commonAction.backTaoliveMainPage();
+                commonAction.backToAppMainPage();
                 return;
             }
 
@@ -310,7 +310,7 @@ walkToEarn.doWalkRoutineTasks = function () {
             var uncompleteTaskNum = shortBrowseTaskList.length + browseTaskList.length + searchTaskList.length + watchTaskList.length;
             log("未完成任务数: " + uncompleteTaskNum);
             if (uncompleteTaskNum == 0) {
-                commonAction.backTaoliveMainPage();
+                commonAction.backToAppMainPage();
                 return;
             }
 
@@ -318,7 +318,7 @@ walkToEarn.doWalkRoutineTasks = function () {
             if (commonAction.doShortBrowseTasks(shortBrowseTaskList)) {
                 walkBtn = common.waitForText("text", "出发", true, 10);
                 if (walkBtn == null) {
-                    commonAction.backTaoliveMainPage();
+                    commonAction.backToAppMainPage();
                     return;
                 }
                 //等待成功提示消失
@@ -331,7 +331,7 @@ walkToEarn.doWalkRoutineTasks = function () {
             if (commonAction.doBrowseTasks(browseTaskList)) {
                 walkBtn = common.waitForText("text", "出发", true, 10);
                 if (walkBtn == null) {
-                    commonAction.backTaoliveMainPage();
+                    commonAction.backToAppMainPage();
                     return;
                 }
                 //等待成功提示消失
@@ -344,7 +344,7 @@ walkToEarn.doWalkRoutineTasks = function () {
             if (commonAction.doSearchTasks(searchTaskList)) {
                 walkBtn = common.waitForText("text", "出发", true, 10);
                 if (walkBtn == null) {
-                    commonAction.backTaoliveMainPage();
+                    commonAction.backToAppMainPage();
                     return;
                 }
                 //等待成功提示消失
@@ -357,7 +357,7 @@ walkToEarn.doWalkRoutineTasks = function () {
             if (commonAction.doWatchTasks(watchTaskList)) {
                 walkBtn = common.waitForText("text", "出发", true, 10);
                 if (walkBtn == null) {
-                    commonAction.backTaoliveMainPage();
+                    commonAction.backToAppMainPage();
                     return;
                 }
                 //等待成功提示消失

@@ -25,7 +25,7 @@ signInEarn.doSignIn = function () {
     toast("doSignIn");
     // 我的-> 元宝中心-> 去签到，上划屏幕找到去签到或待开奖按钮
     if (!commonAction.gotoCoinCenter()) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -42,7 +42,7 @@ signInEarn.doSignIn = function () {
 
     if (btnSignIn == null) {
         log("去签到|待开奖|去开奖 not found")
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -52,7 +52,7 @@ signInEarn.doSignIn = function () {
         common.safeSet(nowDate + ":" + signInTag, "done");
         toastLog("完成 " + signInTag);
         common.grantWalkToEarnPermission();
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -66,7 +66,7 @@ signInEarn.doSignIn = function () {
     if (now < signInBeginTime || now > signInEndTime) {
         common.safeSet(nowDate + ":" + signInTag, "out of time");
         toastLog("过期 " + signInTag);
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -108,7 +108,7 @@ signInEarn.doSignIn = function () {
         }
     }
 
-    commonAction.backTaoliveMainPage();
+    commonAction.backToAppMainPage();
 }
 
 signInEarn.doGetSignInBonus = function () {
@@ -142,7 +142,7 @@ signInEarn.doGetSignInBonus = function () {
     toast("doGetSignInBonus");
     // 我的-> 元宝中心-> 待开奖，上划屏幕找到去签到或待开奖按钮
     if (!commonAction.gotoCoinCenter()) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -159,7 +159,7 @@ signInEarn.doGetSignInBonus = function () {
 
     if (btnSignIn == null) {
         log("去签到|待开奖|去开奖 not found")
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -171,7 +171,7 @@ signInEarn.doGetSignInBonus = function () {
     log(bonusFrame.child(bonusFrame.childCount() - 1).click());
     sleep(1000);
 
-    commonAction.backTaoliveMainPage();
+    commonAction.backToAppMainPage();
 }
 
 module.exports = signInEarn;

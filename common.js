@@ -2,7 +2,7 @@ var common = {};
 
 common.appName = "TaoliveHouseKeeper";
 common.destAppName = "点淘";
-common.taolivePackageName = "com.taobao.live";
+common.destPackageName = "com.taobao.live";
 
 //收益正常才允许每日首次进入，否则元宝只有1/10，首次进入后后面随意进出
 common.walkToEarnPermissionTag = "走路赚元宝准入";

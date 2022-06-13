@@ -168,13 +168,13 @@ workToEarn.doWorkDailySign = function () {
 
     toast("doWorkDailySign");
     if (gotoWorkEarnCoins() == null) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
     var tips = textMatches(/连续签到 \d\/7 天 拿大礼包/).findOne(1000);
     if (tips == null) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -197,7 +197,7 @@ workToEarn.doWorkDailySign = function () {
         }
     }
 
-    commonAction.backTaoliveMainPage();
+    commonAction.backToAppMainPage();
 }
 
 workToEarn.doWorkMainBrowse = function () {
@@ -212,7 +212,7 @@ workToEarn.doWorkMainBrowse = function () {
 
     toast("doWorkMainBrowse");
     if (gotoWorkEarnCoins() == null) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -233,7 +233,7 @@ workToEarn.doWorkMainBrowse = function () {
         toastLog("无 " + browseTag);
     }
 
-    commonAction.backTaoliveMainPage();
+    commonAction.backToAppMainPage();
 }
 
 workToEarn.doWorkMarketBrowse = function () {
@@ -248,7 +248,7 @@ workToEarn.doWorkMarketBrowse = function () {
 
     toast("doWorkMarketBrowse");
     if (gotoWorkEarnCoins() == null) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -269,7 +269,7 @@ workToEarn.doWorkMarketBrowse = function () {
         toastLog("无 " + marketTag);
     }
 
-    commonAction.backTaoliveMainPage();
+    commonAction.backToAppMainPage();
 }
 
 //打工赚元宝周期任务
@@ -279,7 +279,7 @@ workToEarn.doWorkRoutineTasks = function () {
     // 根据连续签到提示确定"收集体力"与"赚体力"两个图片按钮的坐标
     var signTips = gotoWorkEarnCoins();
     if (signTips == null) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -293,14 +293,14 @@ workToEarn.doWorkRoutineTasks = function () {
         var clickRet = earnBtn.click();
         log("点击 赚体力: " + clickRet);
         if (clickRet == false) {
-            commonAction.backTaoliveMainPage();
+            commonAction.backToAppMainPage();
             return;
         }
         sleep(1000);
 
         var taskDetails = common.waitForText("text", "得体力", true, 10);
         if (taskDetails == null) {
-            commonAction.backTaoliveMainPage();
+            commonAction.backToAppMainPage();
             return;
         }
 
@@ -309,8 +309,8 @@ workToEarn.doWorkRoutineTasks = function () {
             var searchTaskList = [];    //搜索任务列表，搜索后返回
             var watchTaskList = [];     //观看任务列表，需要多次折返
             var validTaskNames = [];
-            var totalTasks = packageName(common.taolivePackageName).text("得体力").find();
-            var validTasks = packageName(common.taolivePackageName).text("得体力").visibleToUser(true).find();
+            var totalTasks = packageName(common.destPackageName).text("得体力").find();
+            var validTasks = packageName(common.destPackageName).text("得体力").visibleToUser(true).find();
 
             for (var i = 0; i < validTasks.length; i++) {
                 var taskItem = validTasks[i].parent();
@@ -323,7 +323,7 @@ workToEarn.doWorkRoutineTasks = function () {
 
             if (totalTasks.length == 0) {
                 captureScreen("/sdcard/Download/" + (new Date().Format("yyyy-MM-dd HH:mm:ss")) + ".png");
-                commonAction.backTaoliveMainPage();
+                commonAction.backToAppMainPage();
                 return;
             }
 
@@ -362,7 +362,7 @@ workToEarn.doWorkRoutineTasks = function () {
             var uncompleteTaskNum = browseTaskList.length + searchTaskList.length + watchTaskList.length;
             log("未完成任务数: " + uncompleteTaskNum);
             if (uncompleteTaskNum == 0) {
-                commonAction.backTaoliveMainPage();
+                commonAction.backToAppMainPage();
                 return;
             }
 

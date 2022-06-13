@@ -157,7 +157,7 @@ threads.start(function(){
                 finalNextCheckTS = Math.min(finalNextCheckTS, nextWorkCheckTS);
             }
 
-            log(Math.floor((finalNextCheckTS - now) / 1000) + "s 后的 " + common.timestampToTime(finalNextCheckTS) + " 进行下一次检查");
+            toastLog(Math.floor((finalNextCheckTS - now) / 1000) + "s 后的 " + common.timestampToTime(finalNextCheckTS) + " 进行下一次检查");
             sleep(finalNextCheckTS - now);
         }
     }
@@ -189,16 +189,16 @@ function mainWorker() {
         log("launchApp " + common.destAppName + ": " + app.launchApp(common.destAppName));
         log("recents: " + recents());
         sleep(1000);
-        var btn = text("点淘").findOne(3000);
+        var btn = text(common.appName).findOne(3000);
         if (btn != null) {
-            log("switch to Taolive: " + click(btn.bounds().centerX(), btn.bounds().centerY()));
+            log("switch to " + common.appName + ": " + click(btn.bounds().centerX(), btn.bounds().centerY()));
             sleep(1000);
         } else {
-            log("no 点淘 process");
+            log("no " + common.appName + " process");
         }
-        var isLoged = commonAction.loopJudgeTaoliveMainPage(6000);
+        var isLoged = commonAction.loopJudgeAppMainPage(6000);
         if (!isLoged) {
-            toastLog("Taolive is unknown status");
+            toastLog(common.appName + " is unknown status");
             captureScreen("/sdcard/Download/" + (new Date().Format("yyyy-MM-dd HH:mm:ss")) + ".png");
         } else {
             // 我的-> 元宝中心-> 去游戏
@@ -242,7 +242,7 @@ function mainWorker() {
 	} catch(e) {
 		console.error("mainWorker",e);
     } finally {
-		commonAction.backTaoliveMainPage();
+		commonAction.backToAppMainPage();
 		home();
 		toastLog("Back home success");
 		sleep(3000);

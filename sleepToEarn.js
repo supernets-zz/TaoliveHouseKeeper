@@ -101,7 +101,7 @@ sleepToEarn.doSleepMainBrowse = function () {
 
     toast("doSleepMainBrowse");
     if (gotoSleepEarnCoins() == null) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -121,7 +121,7 @@ sleepToEarn.doSleepMainBrowse = function () {
         toastLog("没有 浏览页面");
     }
 
-    commonAction.backTaoliveMainPage();
+    commonAction.backToAppMainPage();
 }
 
 sleepToEarn.doSleep = function () {
@@ -152,7 +152,7 @@ sleepToEarn.doSleep = function () {
     toast("doSleep");
     var sleepRecord = gotoSleepEarnCoins();
     if (sleepRecord == null) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -193,7 +193,7 @@ sleepToEarn.doSleep = function () {
         }
     }
 
-    commonAction.backTaoliveMainPage();
+    commonAction.backToAppMainPage();
 }
 
 sleepToEarn.doWakeup = function () {
@@ -220,7 +220,7 @@ sleepToEarn.doWakeup = function () {
     toast("doWakeup");
     var sleepRecord = gotoSleepEarnCoins();
     if (sleepRecord == null) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -261,7 +261,7 @@ sleepToEarn.doWakeup = function () {
         toastLog("醒着呢 " + wakeupTag);
     }
 
-    commonAction.backTaoliveMainPage();
+    commonAction.backToAppMainPage();
 }
 
 module.exports = sleepToEarn;

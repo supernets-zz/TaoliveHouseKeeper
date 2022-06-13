@@ -2,8 +2,8 @@ var commonAction = {};
 
 var common = require("./common.js");
 
-findRootTaoliveUi = function () {
-    var root = packageName(common.taolivePackageName).className("FrameLayout").findOne(1000);
+findRootAppUI = function () {
+    var root = packageName(common.destPackageName).className("FrameLayout").findOne(1000);
     if (root == null) {
         toastLog("Taolive FrameLayout is not exist");
         return null;
@@ -12,17 +12,17 @@ findRootTaoliveUi = function () {
 }
 
 // 判断是否主界面
-judgeTaoliveMainPage = function () {
-    var root = findRootTaoliveUi();
+judgeAppMainPage = function () {
+    var root = findRootAppUI();
     if (root == null) {
         return false;
     }
 
-    var tabList = packageName(common.taolivePackageName).id("hp3_tab_img").find();
-    var liveHome = packageName(common.taolivePackageName).id("taolive_home_operation_btn").findOne(1000);
+    var tabList = packageName(common.destPackageName).id("hp3_tab_img").find();
+    var liveHome = packageName(common.destPackageName).id("taolive_home_operation_btn").findOne(1000);
     log("Tab: " + tabList.length + ", Home: " + (liveHome != null));
     if (tabList.length == 4 && liveHome != null) {
-        toastLog("Taolive main page");
+        toastLog(common.appName + " main page");
         return true;
     }
 
@@ -30,10 +30,10 @@ judgeTaoliveMainPage = function () {
 }
 
 // 多次判断是否进入主页，避免网络延时导致问题
-commonAction.loopJudgeTaoliveMainPage = function (sleepTime) {
+commonAction.loopJudgeAppMainPage = function (sleepTime) {
     var trytimes = 0;
     while (trytimes < 10) {
-        var isLoged = judgeTaoliveMainPage();
+        var isLoged = judgeAppMainPage();
         if (isLoged) {
             return true;
         }
@@ -43,27 +43,27 @@ commonAction.loopJudgeTaoliveMainPage = function (sleepTime) {
     return false;
 }
 
-commonAction.backTaoliveMainPage = function () {
-    log("backTaoliveMainPage");
+commonAction.backToMainPage = function () {
+    log("backToMainPage");
     try{
         var curPkg = currentPackage();
         log("currentPackage(): " + curPkg);
-        if (curPkg != common.taolivePackageName) {
+        if (curPkg != common.destPackageName) {
             log("recents: " + recents());
             sleep(1000);
-            var btn = text("点淘").findOne(3000);
+            var btn = text(common.appName).findOne(3000);
             if (btn != null) {
-                log("switch to Taolive: " + click(btn.bounds().centerX(), btn.bounds().centerY()));
+                log("switch to " + common.appName + ": " + click(btn.bounds().centerX(), btn.bounds().centerY()));
                 sleep(1000);
             } else {
-                log("no 点淘 process");
+                log("no " + common.appName + " process");
             }
         }
 
         var trytimes = 0;
         while (trytimes < 10)
         {
-            result = judgeTaoliveMainPage()
+            result = judgeAppMainPage()
             if (result){
                 return true;
             }
@@ -75,7 +75,7 @@ commonAction.backTaoliveMainPage = function () {
             }
             var result = back();
             if (!result) {
-                toastLog("Taolive back fail");
+                toastLog(common.appName + " back fail");
                 return false;
             }
             trytimes = trytimes + 1;
@@ -92,9 +92,9 @@ commonAction.backTaoliveMainPage = function () {
 commonAction.gotoCoinCenter = function () {
     log("gotoCoinCenter");
     var ret = false;
-    var tabList = packageName(common.taolivePackageName).id("hp3_tab_img").find();
+    var tabList = packageName(common.destPackageName).id("hp3_tab_img").find();
     if (tabList.length != 4) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return ret;
     }
 
@@ -102,28 +102,28 @@ commonAction.gotoCoinCenter = function () {
     var clickRet = click(mineTab.bounds().centerX(), mineTab.bounds().centerY());
     log("点击 我的: " + clickRet);
     if (clickRet == false) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return ret;
     }
     sleep(1000);
 
     var coinCenter = common.waitForText("text", "元宝中心", true, 10);
     if (coinCenter == null) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return ret;
     }
 
     clickRet = click(coinCenter.bounds().centerX(), coinCenter.bounds().centerY() - coinCenter.bounds().height());
     log("点击 元宝中心: " + clickRet);
     if (clickRet == false) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return ret;
     }
 
     sleep(1000);
     coinCenter = common.waitForText("text", "我的元宝，今日已赚", true, 10);
     if (coinCenter == null) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return ret;
     }
 

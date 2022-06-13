@@ -23,7 +23,7 @@ eliminateToEarn.doEliminate = function () {
     toast("doEliminate");
     // 我的-> 元宝中心-> 去签到，上划屏幕找到去签到或待开奖按钮
     if (!commonAction.gotoCoinCenter()) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -40,7 +40,7 @@ eliminateToEarn.doEliminate = function () {
 
     if (btnGame == null) {
         log("去游戏 not found")
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -49,12 +49,12 @@ eliminateToEarn.doEliminate = function () {
     var addGameTimesPt = common.waitForImage(addGameTimes, 30);
     if (addGameTimesPt == null) {
         log("游戏加载失败");
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
     log("点击 加体力: " + click(addGameTimesPt.x, addGameTimesPt.y));
-    sleep(1000);
+    sleep(3000);
 
     var startTick = new Date().getTime();
     for (;(new Date().getTime() - startTick) / 1000 < 20 * 60;) {
@@ -140,7 +140,7 @@ eliminateToEarn.doEliminate = function () {
         }
     }
 
-    commonAction.backTaoliveMainPage();
+    commonAction.backToAppMainPage();
 }
 
 module.exports = eliminateToEarn;

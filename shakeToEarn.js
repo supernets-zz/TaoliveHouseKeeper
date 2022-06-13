@@ -41,7 +41,7 @@ shakeToEarn.doShakeMainBrowse = function () {
 
     toast("doShakeMainBrowse");
     if (gotoShakeEarnCoins() == null) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -61,7 +61,7 @@ shakeToEarn.doShakeMainBrowse = function () {
         toastLog("没有 浏览页面");
     }
 
-    commonAction.backTaoliveMainPage();
+    commonAction.backToAppMainPage();
 }
 
 //摇一摇赚元宝周期任务
@@ -70,7 +70,7 @@ shakeToEarn.doShakeRoutineTasks = function () {
     // 我的-> 元宝中心-> 摇一摇赚元宝
     var pkBtn = gotoShakeEarnCoins();
     if (pkBtn == null) {
-        commonAction.backTaoliveMainPage();
+        commonAction.backToAppMainPage();
         return;
     }
 
@@ -80,14 +80,14 @@ shakeToEarn.doShakeRoutineTasks = function () {
         var clickRet = earnPKNumBtn.click();
         log("点击 赚次数: " + clickRet);
         if (clickRet == false) {
-            commonAction.backTaoliveMainPage();
+            commonAction.backToAppMainPage();
             return;
         }
         sleep(1000);
 
         var taskDetails = common.waitForText("text", "得次数", true, 10);
         if (taskDetails == null) {
-            commonAction.backTaoliveMainPage();
+            commonAction.backToAppMainPage();
             return;
         }
 
@@ -96,8 +96,8 @@ shakeToEarn.doShakeRoutineTasks = function () {
             var searchTaskList = [];    //搜索任务列表，搜索后返回
             var watchTaskList = [];     //观看任务列表，需要多次折返
             var validTaskNames = [];
-            var totalTasks = packageName(common.taolivePackageName).text("得次数").find();
-            var validTasks = packageName(common.taolivePackageName).text("得次数").visibleToUser(true).find();
+            var totalTasks = packageName(common.destPackageName).text("得次数").find();
+            var validTasks = packageName(common.destPackageName).text("得次数").visibleToUser(true).find();
 
             validTasks.forEach(function (tv) {
                 var taskItem = tv.parent();
@@ -111,7 +111,7 @@ shakeToEarn.doShakeRoutineTasks = function () {
 
             if (totalTasks.length == 0) {
                 captureScreen("/sdcard/Download/" + (new Date().Format("yyyy-MM-dd HH:mm:ss")) + ".png");
-                commonAction.backTaoliveMainPage();
+                commonAction.backToAppMainPage();
                 return;
             }
 
@@ -145,7 +145,7 @@ shakeToEarn.doShakeRoutineTasks = function () {
             var uncompleteTaskNum = browseTaskList.length + searchTaskList.length + watchTaskList.length;
             log("未完成任务数: " + uncompleteTaskNum);
             if (uncompleteTaskNum == 0) {
-                commonAction.backTaoliveMainPage();
+                commonAction.backToAppMainPage();
                 return;
             }
 
