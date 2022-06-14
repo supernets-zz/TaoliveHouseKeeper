@@ -51,6 +51,7 @@ collectStrength = function () {
         return;
     }
 
+    sleep(2000);
     //体力值
     var strengthBalance = 0
     var exchangeBtn = text("兑换").findOne(1000);
@@ -60,6 +61,9 @@ collectStrength = function () {
     log("体力值: " + strengthBalance);
 
     //领取体力、打工、赚体力的父节点
+    log("signTips.parent().childCount(): " + signTips.parent().childCount());
+    log("signTips.parent().parent().childCount(): " + signTips.parent().parent().childCount());
+    log("signTips.parent().parent().parent().childCount(): " + signTips.parent().parent().parent().childCount());
     var threeBtnsBar = signTips.parent().parent().parent().child(0);
     var getStrengthBtn = threeBtnsBar.child(0);
     var canGetStrength = "";    // 体力领完了就没有了

@@ -3,10 +3,7 @@ var shakeToEarn = {};
 var common = require("./common.js");
 var commonAction = require("./commonAction.js");
 
-const browseTag = "摇一摇赚元宝浏览首页";
-
-shakeToEarn.dailyJobs = [];
-shakeToEarn.dailyJobs.push(browseTag);
+const browseTag = "摇一摇赚元宝浏览首页";   //不一定有，不能列入每日任务中
 
 gotoShakeEarnCoins = function () {
     if (!commonAction.gotoCoinCenter()) {

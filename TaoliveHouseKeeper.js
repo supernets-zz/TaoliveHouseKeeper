@@ -170,9 +170,7 @@ function isAllDailyTaskComplete() {
     if (permitted != null) {
         taskList.push.apply(taskList, walkToEarn.dailyJobs);
     }
-    taskList.push.apply(taskList, shakeToEarn.dailyJobs);
     taskList.push.apply(taskList, workToEarn.dailyJobs);
-    taskList.push.apply(taskList, sleepToEarn.dailyJobs);
     for (var i = 0; i < taskList.length; i++) {
         var done = common.safeGet(nowDate + ":" + taskList[i]);
         if (done == null) {
@@ -189,16 +187,16 @@ function mainWorker() {
         log("launchApp " + common.destAppName + ": " + app.launchApp(common.destAppName));
         log("recents: " + recents());
         sleep(1000);
-        var btn = text(common.appName).findOne(3000);
+        var btn = text(common.destAppName).findOne(3000);
         if (btn != null) {
-            log("switch to " + common.appName + ": " + click(btn.bounds().centerX(), btn.bounds().centerY()));
+            log("switch to " + common.destAppName + ": " + click(btn.bounds().centerX(), btn.bounds().centerY()));
             sleep(1000);
         } else {
-            log("no " + common.appName + " process");
+            log("no " + common.destAppName + " process");
         }
         var isLoged = commonAction.loopJudgeAppMainPage(6000);
         if (!isLoged) {
-            toastLog(common.appName + " is unknown status");
+            toastLog(common.destAppName + " is unknown status");
             captureScreen("/sdcard/Download/" + (new Date().Format("yyyy-MM-dd HH:mm:ss")) + ".png");
         } else {
             // 我的-> 元宝中心-> 去游戏

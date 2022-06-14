@@ -22,7 +22,7 @@ judgeAppMainPage = function () {
     var liveHome = packageName(common.destPackageName).id("taolive_home_operation_btn").findOne(1000);
     log("Tab: " + tabList.length + ", Home: " + (liveHome != null));
     if (tabList.length == 4 && liveHome != null) {
-        toastLog(common.appName + " main page");
+        toastLog(common.destAppName + " main page");
         return true;
     }
 
@@ -43,20 +43,20 @@ commonAction.loopJudgeAppMainPage = function (sleepTime) {
     return false;
 }
 
-commonAction.backToMainPage = function () {
-    log("backToMainPage");
+commonAction.backToAppMainPage = function () {
+    log("backToAppMainPage");
     try{
         var curPkg = currentPackage();
         log("currentPackage(): " + curPkg);
         if (curPkg != common.destPackageName) {
             log("recents: " + recents());
             sleep(1000);
-            var btn = text(common.appName).findOne(3000);
+            var btn = text(common.destAppName).findOne(3000);
             if (btn != null) {
-                log("switch to " + common.appName + ": " + click(btn.bounds().centerX(), btn.bounds().centerY()));
+                log("switch to " + common.destAppName + ": " + click(btn.bounds().centerX(), btn.bounds().centerY()));
                 sleep(1000);
             } else {
-                log("no " + common.appName + " process");
+                log("no " + common.destAppName + " process");
             }
         }
 
@@ -75,7 +75,7 @@ commonAction.backToMainPage = function () {
             }
             var result = back();
             if (!result) {
-                toastLog(common.appName + " back fail");
+                toastLog(common.destAppName + " back fail");
                 return false;
             }
             trytimes = trytimes + 1;
@@ -263,6 +263,7 @@ commonAction.doWatchTasks = function (tasklist) {
     for (var i = 0; i < tasklist.length; i++) {
         toastLog("点击 " + tasklist[i].Title + " " + tasklist[i].BtnName + ": " + click(tasklist[i].Button.bounds().centerX(), tasklist[i].Button.bounds().centerY()));
         // 等待离开任务列表页面
+        sleep(5000);
         var countdown = common.waitForText("text", "后完成", true, 10)
         if (countdown != null) {
             var lastLeftTime = parseInt(countdown.parent().child(1).text().match(/\d+/));

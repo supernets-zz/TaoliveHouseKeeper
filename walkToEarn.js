@@ -295,8 +295,10 @@ walkToEarn.doWalkRoutineTasks = function () {
                             browseTaskList.push(obj);
                         } else if (obj.Title.indexOf("搜索") != -1) {
                             searchTaskList.push(obj);
-                        } else if ((obj.Title.indexOf("直播") != -1 || obj.Title.indexOf("视频") != -1 || obj.Title.indexOf("分钟") != -1) && canWatch) {
-                            watchTaskList.push(obj);
+                        } else if (obj.Title.indexOf("直播") != -1 || obj.Title.indexOf("视频") != -1 || obj.Title.indexOf("分钟") != -1) {
+                            if (canWatch) {
+                                watchTaskList.push(obj);
+                            }
                         } else {
                             shortBrowseTaskList.push(obj);
                         }

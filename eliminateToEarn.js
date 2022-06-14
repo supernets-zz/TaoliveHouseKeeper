@@ -73,7 +73,7 @@ eliminateToEarn.doEliminate = function () {
 
         if (todoPt != null) {
             log("点击 去完成: " + click(todoPt.x, todoPt.y));
-            sleep(1000);
+            sleep(5000);
             var countdown = common.waitForText("text", "后完成", true, 10)
             if (countdown != null) {
                 var lastLeftTime = parseInt(countdown.parent().child(1).text().match(/\d+/));

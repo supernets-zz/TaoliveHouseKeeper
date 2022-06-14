@@ -3,12 +3,9 @@ var sleepToEarn = {};
 var common = require("./common.js");
 var commonAction = require("./commonAction.js");
 
-const browseTag = "睡觉赚元宝浏览首页";
+const browseTag = "睡觉赚元宝浏览首页"; //不一定有，不能列入每日任务中
 const sleepTag = "睡觉赚元宝去睡觉";    //每晚21:00至次日3:00
 const wakeupTag = "睡觉赚元宝我醒来啦"; //次日06:00至20:59，同连续3天完成睡觉任务领取福袋
-
-sleepToEarn.dailyJobs = [];
-sleepToEarn.dailyJobs.push(browseTag);
 
 gotoSleepEarnCoins = function () {
     if (!commonAction.gotoCoinCenter()) {

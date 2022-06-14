@@ -64,7 +64,7 @@ signInEarn.doSignIn = function () {
     log("签到有效时间段: [" + common.timestampToTime(signInBeginTime) + ", " + common.timestampToTime(signInEndTime) + "]");
     //不在时间范围内，签到任务又没做，当日就断签了
     if (now < signInBeginTime || now > signInEndTime) {
-        common.safeSet(nowDate + ":" + signInTag, "out of time");
+        common.safeSet(nowDate + ":" + signInTag, "expired");
         toastLog("过期 " + signInTag);
         commonAction.backToAppMainPage();
         return;

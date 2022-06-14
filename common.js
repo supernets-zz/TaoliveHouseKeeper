@@ -119,6 +119,7 @@ common.waitForText = function (method, txt, visible, sec) {
                 if (obj.bounds().height() < 10) {
                     log("等待 " + txt + " 出现, height: " + obj.bounds().height());
                     obj = null;
+                    sleep(1000);
                 }
             }
         }
@@ -142,6 +143,7 @@ common.waitForTextMatches = function (regex, visible, sec) {
                 if (obj.bounds().height() < 10) {
                     log("等待 " + regex + " 出现, height: " + obj.bounds().height());
                     obj = null;
+                    sleep(1000);
                 }
             }
         }
