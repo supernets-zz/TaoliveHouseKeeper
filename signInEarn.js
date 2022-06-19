@@ -31,9 +31,9 @@ signInEarn.doSignIn = function () {
 
     var btnSignIn = null;
     for (var i = 0; i < 10; i++) {
-        btnSignIn = textMatches(/去签到|待开奖|去开奖/).visibleToUser(true).findOne(1000);
+        btnSignIn = textMatches(/去签到|待开奖|去开奖|去看看/).visibleToUser(true).findOne(1000);
         if (btnSignIn == null || btnSignIn != null && btnSignIn.bounds().height() < 42) {
-            log("上划屏幕找 去签到|待开奖|去开奖: " + swipe(device.width / 2, device.height * 7 / 8, device.width / 2, device.height / 8, 1000));
+            log("上划屏幕找 去签到|待开奖|去开奖|去看看: " + swipe(device.width / 2, device.height * 7 / 8, device.width / 2, device.height / 8, 1000));
             sleep(1000);
             continue;
         }
@@ -41,7 +41,7 @@ signInEarn.doSignIn = function () {
     }
 
     if (btnSignIn == null) {
-        log("去签到|待开奖|去开奖 not found")
+        log("去签到|待开奖|去开奖|去看看 not found")
         commonAction.backToAppMainPage();
         return;
     }
@@ -148,9 +148,9 @@ signInEarn.doGetSignInBonus = function () {
 
     var btnSignIn = null;
     for (var i = 0; i < 10; i++) {
-        btnSignIn = textMatches(/去签到|待开奖|去开奖/).visibleToUser(true).findOne(1000);
+        btnSignIn = textMatches(/去签到|待开奖|去开奖|去看看/).visibleToUser(true).findOne(1000);
         if (btnSignIn == null || btnSignIn != null && btnSignIn.bounds().height() < 42) {
-            log("上划屏幕找 去签到|待开奖|去开奖: " + swipe(device.width / 2, device.height * 7 / 8, device.width / 2, device.height / 8, 1000));
+            log("上划屏幕找 去签到|待开奖|去开奖|去看看: " + swipe(device.width / 2, device.height * 7 / 8, device.width / 2, device.height / 8, 1000));
             sleep(1000);
             continue;
         }
@@ -158,18 +158,37 @@ signInEarn.doGetSignInBonus = function () {
     }
 
     if (btnSignIn == null) {
-        log("去签到|待开奖|去开奖 not found")
+        log("去签到|待开奖|去开奖|去看看 not found")
+        commonAction.backToAppMainPage();
+        return;
+    }
+
+    if (btnSignIn.text() == "去看看") {
+        common.safeSet(nowDate + ":" + getSignInBonusTag, "done");
+        toastLog("完成 " + getSignInBonusTag);
         commonAction.backToAppMainPage();
         return;
     }
 
     log("点击 去开奖: " + click(btnSignIn.bounds().centerX(), btnSignIn.bounds().centerY()));
 
+    var getBonusTimeTips = common.waitForText("text", "20:00-24:00", true, 15);
+    if (getBonusTimeTips == null) {
+        commonAction.backToAppMainPage();
+        return;
+    }
+
     //每日签到开奖
-    var getBonusTips = common.waitForText("text", "最高可获得1000000元宝", true, 10);
-    var bonusFrame = getBonusTips.parent();
-    log(bonusFrame.child(bonusFrame.childCount() - 1).click());
-    sleep(1000);
+    var getBonusTips = text("最高可获得1000000元宝").findOne(1000);
+    if (getBonusTips != null) {
+        var bonusFrame = getBonusTips.parent();
+        log(bonusFrame.child(bonusFrame.childCount() - 1).click());
+        sleep(1000);
+        common.safeSet(nowDate + ":" + getSignInBonusTag, "done");
+        toastLog("完成 " + getSignInBonusTag);
+        commonAction.backToAppMainPage();
+        return;
+    }
 
     commonAction.backToAppMainPage();
 }

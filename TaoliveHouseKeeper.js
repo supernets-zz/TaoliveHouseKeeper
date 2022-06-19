@@ -199,15 +199,14 @@ function mainWorker() {
             toastLog(common.destAppName + " is unknown status");
             captureScreen("/sdcard/Download/" + (new Date().Format("yyyy-MM-dd HH:mm:ss")) + ".png");
         } else {
-            // 我的-> 元宝中心-> 去游戏
-            eliminateToEarn.doEliminate();
             // 我的-> 元宝中心-> 去签到 主页
             // 因为签到只有在收益正常的时候才能成功，故作为走路赚元宝准人判断的依据
             signInEarn.doSignIn();
-            signInEarn.doGetSignInBonus();
 
             // 我的-> 元宝中心-> 去睡觉
             sleepToEarn.doSleep();
+            // [20:00-21:00]应该以是否有金蛋来确定收益是否正常，[21:00-24:00]睡觉成功了那应该立马去开奖
+            signInEarn.doGetSignInBonus();
             // 我的-> 元宝中心-> 去睡觉
             sleepToEarn.doWakeup();
             // 我的-> 元宝中心-> 去睡觉 主页，时有时无
@@ -234,6 +233,9 @@ function mainWorker() {
             walkToEarn.doWalkRoutineTasks();
             // 我的-> 元宝中心-> 打工赚元宝，浏览xx、看视频、看直播
             workToEarn.doWorkRoutineTasks();
+
+            // 我的-> 元宝中心-> 去游戏
+            eliminateToEarn.doEliminate();
 
             ret = true;
         }

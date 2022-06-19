@@ -157,6 +157,13 @@ sleepToEarn.doSleep = function () {
     var mainFrame = sleepRecord.parent().parent();
     var sleepBtn = mainFrame.child(1);
     log("睡觉按钮: " + sleepBtn.text());
+    if (/\d+:\d+:\d+后可结束睡觉/.test(sleepBtn.text())) {
+        setSleepTag();
+        toastLog("完成 " + sleepTag);
+        commonAction.backToAppMainPage();
+        return;
+    }
+
     var tips = "";
     for (var i = 0; i < 30; i++) {
         var objs = [];
@@ -173,6 +180,7 @@ sleepToEarn.doSleep = function () {
             break;
         }
         sleep(1000);
+        tips = "";
     }
 
     var coins = tips.match(/\d+/);

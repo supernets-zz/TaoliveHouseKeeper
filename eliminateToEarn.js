@@ -7,9 +7,32 @@ const eliminateGameTag = "消消赚元宝";
 const addGameTimes = "./eliminateGame_addGameTimes.jpg";
 const getAward = "./eliminateGame_getAward.jpg";
 const todo = "./eliminateGame_todo.jpg";
+const complete = "./eliminateGame_done.jpg";
 
 eliminateToEarn.dailyJobs = [];
 eliminateToEarn.dailyJobs.push(eliminateGameTag);
+
+isComplete = function () {
+    var result = common.findImageInRegion(complete, device.width - 180, device.height - 85 - 130 * 4, 180, 130);
+    if (result == null) {
+        return false;
+    }
+    log("[" + (device.width - 180) + ", " + (device.height - 85 - 130 * 4) + ", 180, 130]: (" + result.x + ", " + result.y + ")");
+
+    var result = common.findImageInRegion(complete, device.width - 180, device.height - 85 - 130 * 2, 180, 130);
+    if (result == null) {
+        return false;
+    }
+    log("[" + (device.width - 180) + ", " + (device.height - 85 - 130 * 2) + ", 180, 130]: (" + result.x + ", " + result.y + ")");
+
+    var result = common.findImageInRegion(complete, device.width - 180, device.height - 85 - 130 * 1, 180, 130);
+    if (result == null) {
+        return false;
+    }
+    log("[" + (device.width - 180) + ", " + (device.height - 85 - 130 * 1) + ", 180, 130]: (" + result.x + ", " + result.y + ")");
+
+    return true;
+}
 
 eliminateToEarn.doEliminate = function () {
     log("doEliminate");
@@ -57,14 +80,15 @@ eliminateToEarn.doEliminate = function () {
     sleep(3000);
 
     var startTick = new Date().getTime();
-    for (;(new Date().getTime() - startTick) / 1000 < 20 * 60;) {
-        var getAwardPt = common.findImage(getAward);
-        var todoPt = common.findImage(todo);
-        if (getAwardPt == null && todoPt == null) {
+    for (;;) {
+        if (isComplete()) {
             common.safeSet(nowDate + ":" + eliminateGameTag, "done");
             toastLog("完成 " + eliminateGameTag);
             break;
         }
+
+        var getAwardPt = common.findImage(getAward);
+        var todoPt = common.findImage(todo);
 
         if (getAwardPt != null) {
             log("点击 领奖励: " + click(getAwardPt.x, getAwardPt.y));
@@ -138,6 +162,13 @@ eliminateToEarn.doEliminate = function () {
                 sleep(5000);
             }
         }
+
+        if (new Date().getTime() - startTick > 20 * 60 * 1000) {
+            log("timeout");
+            break;
+        }
+
+        sleep(3000);
     }
 
     commonAction.backToAppMainPage();
