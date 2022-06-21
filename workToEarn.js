@@ -338,7 +338,7 @@ workToEarn.doWorkRoutineTasks = function () {
                 var title = taskItem.child(0).text();
                 var btn = taskItem.child(taskItem.childCount() - 2);
                 if (btn != null) {
-                    if (/去完成|去浏览/.test(btn.text()) && 
+                    if (/去完成|去浏览|去观看/.test(btn.text()) && 
                         title.indexOf("邀请") == -1 && 
                         title.indexOf("支付宝") == -1 && 
                         title.indexOf("人脉价值") == -1 &&

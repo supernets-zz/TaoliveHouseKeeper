@@ -18,10 +18,9 @@ judgeAppMainPage = function () {
         return false;
     }
 
-    var tabList = packageName(common.destPackageName).id("hp3_tab_img").find();
-    var liveHome = packageName(common.destPackageName).id("taolive_home_operation_btn").findOne(1000);
-    log("Tab: " + tabList.length + ", Home: " + (liveHome != null));
-    if (tabList.length == 4 && liveHome != null) {
+    var tabList = packageName(common.destPackageName).id("hp3_bottom_tab").find();
+    log("Tab: " + tabList.length);
+    if (tabList.length > 0) {
         toastLog(common.destAppName + " main page");
         return true;
     }

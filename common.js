@@ -106,13 +106,30 @@ common.listAll = function () {
 
 common.waitForText = function (method, txt, visible, sec) {
     var obj = null;
-    for (var i = 0; i < sec && obj == null; i++) {
+    var startTick = new Date().getTime();
+    for (;obj == null;) {
         if (visible) {
             obj = eval(method + "(\"" + txt + "\").visibleToUser(true).findOne(1000)");
         } else {
             obj = eval(method + "(\"" + txt + "\").findOne(1000)");
         }
         if (obj == null) {
+            var curPkg = currentPackage();
+            if (curPkg != common.destPackageName) {
+                //跳其他app了要跳回来
+                log("currentPackage(): " + curPkg);
+                sleep(15000);
+                log("recents: " + recents());
+                sleep(1000);
+                var btn = text(common.destAppName).findOne(3000);
+                if (btn != null) {
+                    log("switch to " + common.destAppName + ": " + click(btn.bounds().centerX(), btn.bounds().centerY()));
+                    sleep(1000);
+                } else {
+                    log("no " + common.destAppName + " process");
+                }
+            }
+
             log("等待 " + txt + " 出现");
         } else {
             if (visible) {
@@ -122,6 +139,10 @@ common.waitForText = function (method, txt, visible, sec) {
                     sleep(1000);
                 }
             }
+        }
+
+        if (new Date().getTime() - startTick > sec * 1000) {
+            break;
         }
     }
     //log(txt + " 出现" + obj);
@@ -137,6 +158,21 @@ common.waitForTextMatches = function (regex, visible, sec) {
             obj = eval("textMatches(" + regex + ").findOne(1000)");
         }
         if (obj == null) {
+            var curPkg = currentPackage();
+            if (curPkg != common.destPackageName) {
+                //跳其他app了要跳回来
+                log("currentPackage(): " + curPkg);
+                log("recents: " + recents());
+                sleep(1000);
+                var btn = text(common.destAppName).findOne(3000);
+                if (btn != null) {
+                    log("switch to " + common.destAppName + ": " + click(btn.bounds().centerX(), btn.bounds().centerY()));
+                    sleep(1000);
+                } else {
+                    log("no " + common.destAppName + " process");
+                }
+            }
+
             log("等待 " + regex + " 出现");
         } else {
             if (visible) {
@@ -167,7 +203,7 @@ common.findImage = function (tmpl) {
 common.findImageInRegion = function (tmpl, x, y, w, h) {
     var img = captureScreen();
     var templ = images.read(tmpl);
-    point = findImage(img, templ, x, y, w, h);
+    point = findImageInRegion(img, templ, x, y, w, h);
     if (point != null) {
         point.x = point.x + Math.floor(templ.getWidth() / 2);
         point.y = point.y + Math.floor(templ.getHeight() / 2);
@@ -193,17 +229,22 @@ common.waitForImage = function (tmpl, sec) {
     return point;
 }
 
-//返回是否超时
+//返回false代表超时
 common.waitDismiss = function (method, txt, sec) {
     // 等待离开"进入并关注"任务列表页面
     var obj = null;
-    for (var i = 0; i < sec; i++) {
+    var startTick = new Date().getTime();
+    for (;;) {
         obj = eval(method + "(\"" + txt + "\").findOne(1000)");
         if (obj != null) {
             log("等待 " + txt + " 消失");
-            return false;
+            sleep(1000);
         } else {
             return true;
+        }
+
+        if (new Date().getTime() - startTick > sec * 1000) {
+            break;
         }
     }
     return false;
