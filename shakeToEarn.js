@@ -23,6 +23,13 @@ gotoShakeEarnCoins = function () {
 
     //按钮"摇动手机，开始PK"
     var pkBtn = common.waitForText("text", "摇动手机，开始PK", true, 10);
+
+    sleep(5000);
+    var iKnowBtn = text("我知道了").findOne(1000);
+    if (iKnowBtn != null) {
+        log("点击 我知道了: " + iKnowBtn.click());
+        sleep(2000);
+    }
     return pkBtn;
 }
 

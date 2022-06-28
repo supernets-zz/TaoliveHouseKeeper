@@ -13,10 +13,10 @@ walkToEarn.dailyJobs.push(streetTag);
 gotoWalkEarnCoins = function () {
     var walkBtn = null;
 
-    var urgentTime = common.checkAuditTime("14:30", "24:00");
+    var urgentTime = common.checkAuditTime("14:00", "24:00");
     var nowDate = new Date().Format("yyyy-MM-dd");
     var permitted = common.safeGet(nowDate + ":" + common.walkToEarnPermissionTag);
-    log("permitted: " + permitted + ", [14:30~24:00]: " + urgentTime);
+    log("permitted: " + permitted + ", [14:00~24:00]: " + urgentTime);
     if (permitted == null) {
         log(common.walkToEarnPermissionTag + " : " + permitted);
         if (urgentTime) {

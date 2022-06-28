@@ -123,7 +123,7 @@ common.waitForText = function (method, txt, visible, sec) {
                 sleep(1000);
                 var btn = text(common.destAppName).findOne(3000);
                 if (btn != null) {
-                    log("switch to " + common.destAppName + ": " + click(btn.bounds().centerX(), btn.bounds().centerY()));
+                    log("switch to " + common.destAppName + ": " + btn.parent().parent().click());
                     sleep(1000);
                 } else {
                     log("no " + common.destAppName + " process");
@@ -166,7 +166,7 @@ common.waitForTextMatches = function (regex, visible, sec) {
                 sleep(1000);
                 var btn = text(common.destAppName).findOne(3000);
                 if (btn != null) {
-                    log("switch to " + common.destAppName + ": " + click(btn.bounds().centerX(), btn.bounds().centerY()));
+                    log("switch to " + common.destAppName + ": " + btn.parent().parent().click());
                     sleep(1000);
                 } else {
                     log("no " + common.destAppName + " process");
