@@ -173,6 +173,8 @@ shakeToEarn.doShakeRoutineTasks = function () {
                 sleep(3000);
                 break;
             }
+
+            log("上划任务列表: " + swipe(device.width / 5, device.height * 13 / 16, device.width / 5, device.height * 11 / 16, 200));
         }
     }
 }

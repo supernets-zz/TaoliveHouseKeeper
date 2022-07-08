@@ -189,9 +189,8 @@ common.waitForTextMatches = function (regex, visible, sec) {
 }
 
 common.findImage = function (tmpl) {
-    var img = captureScreen();
     var templ = images.read(tmpl);
-    point = findImage(img, templ);
+    point = findImage(captureScreen(), templ);
     if (point != null) {
         point.x = point.x + Math.floor(templ.getWidth() / 2);
         point.y = point.y + Math.floor(templ.getHeight() / 2);
@@ -201,9 +200,8 @@ common.findImage = function (tmpl) {
 }
 
 common.findImageInRegion = function (tmpl, x, y, w, h) {
-    var img = captureScreen();
     var templ = images.read(tmpl);
-    point = findImageInRegion(img, templ, x, y, w, h);
+    point = findImageInRegion(captureScreen(), templ, x, y, w, h);
     if (point != null) {
         point.x = point.x + Math.floor(templ.getWidth() / 2);
         point.y = point.y + Math.floor(templ.getHeight() / 2);
@@ -214,8 +212,8 @@ common.findImageInRegion = function (tmpl, x, y, w, h) {
 
 common.waitForImage = function (tmpl, sec) {
     var point = null;
-    var startTick = new Date();
-    for (;(new Date().getTime() - startTick) / 1000 < sec && point == null;) {
+    var startTick = new Date().getTime();
+    for (;;) {
         point = common.findImage(tmpl);
         if (point) {
             log(tmpl + " 出现 (" + point.x + ", " + point.y + ")");
@@ -223,7 +221,32 @@ common.waitForImage = function (tmpl, sec) {
         } else {
             log("等待 " + tmpl + " 出现");
         }
-        sleep(5000);
+
+        sleep(1000);
+        if (new Date().getTime() - startTick > sec * 1000) {
+            break;
+        }
+    }
+    //log(tmpl + " 出现" + point);
+    return point;
+}
+
+common.waitForImageInRegion = function (tmpl, x, y, w, h, sec) {
+    var point = null;
+    var startTick = new Date().getTime();
+    for (;;) {
+        point = common.findImageInRegion(tmpl, x, y, w, h);
+        if (point) {
+            log(tmpl + " 出现 (" + point.x + ", " + point.y + ")");
+            break;
+        } else {
+            log("等待 " + tmpl + " 出现");
+        }
+
+        sleep(1000);
+        if (new Date().getTime() - startTick > sec * 1000) {
+            break;
+        }
     }
     //log(tmpl + " 出现" + point);
     return point;

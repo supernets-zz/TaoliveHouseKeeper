@@ -5,7 +5,7 @@ var common = require("./common.js");
 findRootAppUI = function () {
     var root = packageName(common.destPackageName).className("FrameLayout").findOne(1000);
     if (root == null) {
-        toastLog("Taolive FrameLayout is not exist");
+        toastLog(common.destAppName + " FrameLayout is not exist");
         return null;
     }
     return root;

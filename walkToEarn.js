@@ -103,7 +103,7 @@ collectSteps = function () {
     var newNextWalkCheckTimestamp = new Date(curDate + " 24:00:00").getTime();
     if (/\d+:\d+:\d+/.test(energyLeftTime.text())) {
         var HHmmss = energyLeftTime.text().match(/\d+/g);
-        newNextWalkCheckTimestamp = new Date().getTime() + (parseInt(HHmmss[0]) * 3600 + parseInt(HHmmss[1]) * 60 + parseInt(HHmmss[2])) * 1000;
+        newNextWalkCheckTimestamp = new Date().getTime() + (Number(HHmmss[0]) * 3600 + Number(HHmmss[1]) * 60 + Number(HHmmss[2])) * 1000;
     }
     common.safeSet(common.nextWalkCheckTimestampTag, newNextWalkCheckTimestamp);
     log(common.nextWalkCheckTimestampTag + " 设置为: " + common.timestampToTime(newNextWalkCheckTimestamp));
